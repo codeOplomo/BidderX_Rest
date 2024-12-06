@@ -2,15 +2,18 @@ package org.anas.bidderx_rest.domain;
 
 import jakarta.persistence.*;
 import org.anas.bidderx_rest.domain.enums.Role;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
 @Entity
 @Table(name = "\"users\"")
-public class AppUser {
+public class AppUser implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -45,7 +48,7 @@ public class AppUser {
 
     // One-to-Many relationship with Collection
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Collection> collections = new ArrayList<>();
+    private List<AppCollection> collections = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Bid> bids = new ArrayList<>();
@@ -68,8 +71,13 @@ public class AppUser {
         this.password = password;
     }
 
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of();
+    }
+
     // Optional: Helper method to add a collection
-    public void addCollection(Collection collection) {
+    public void addCollection(AppCollection collection) {
         if (collection != null) {
             this.collections.add(collection);
             collection.setAppUser(this);
@@ -77,7 +85,7 @@ public class AppUser {
     }
 
     // Helper method to remove a collection
-    public void removeCollection(Collection collection) {
+    public void removeCollection(AppCollection collection) {
         if (collection != null) {
             this.collections.remove(collection);
             collection.setAppUser(null);
@@ -157,6 +165,39 @@ public class AppUser {
         this.id = id;
     }
 
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    public String getVerificationCode() {
+        return verificationCode;
+    }
+
+    public void setVerificationCode(String verificationCode) {
+        this.verificationCode = verificationCode;
+    }
+
+    public LocalDateTime getVerificationCodeExpiresAt() {
+        return verificationCodeExpiresAt;
+    }
+
+    public void setVerificationCodeExpiresAt(LocalDateTime verificationCodeExpiresAt) {
+        this.verificationCodeExpiresAt = verificationCodeExpiresAt;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
     public String getUsername() {
         return username;
     }
@@ -221,11 +262,11 @@ public class AppUser {
         this.password = password;
     }
 
-    public List<Collection> getCollections() {
+    public List<AppCollection> getCollections() {
         return collections;
     }
 
-    public void setCollections(List<Collection> collections) {
+    public void setCollections(List<AppCollection> collections) {
         this.collections = collections;
     }
 
