@@ -1,0 +1,38 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1733747689
+      author: QLIKY
+      changes:
+        - createTable:
+            tableName: auction_reactions
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: auction_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    references: auctions(id)
+                    foreignKeyName: fk_reaction_auction
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    references: users(id)
+                    foreignKeyName: fk_reaction_user
+              - column:
+                  name: reaction_type
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reaction_time
+                  type: datetime
+                  constraints:
+                    nullable: false

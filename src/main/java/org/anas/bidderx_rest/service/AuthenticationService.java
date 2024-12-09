@@ -16,8 +16,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 
 @Service
 public class AuthenticationService {
@@ -39,20 +41,26 @@ public class AuthenticationService {
     }
 
     public AppUser signup(RegisterVM input) {
-        if (userRepository.findByUsername(input.getUsername()).isPresent()) {
-            throw new CredentialsAlreadyExistException("Username already exists");
-        }
+//        if (userRepository.findByUsername(input.getUsername()).isPresent()) {
+//            throw new CredentialsAlreadyExistException("Username already exists");
+//        }
         if (userRepository.findByEmail(input.getEmail()).isPresent()) {
             throw new CredentialsAlreadyExistException("Email already in use");
         }
-        if (userRepository.findByCin(input.getCin()).isPresent()) {
-            throw new CredentialsAlreadyExistException("CIN already registered");
-        }
-        AppUser user = new AppUser(input.getUsername(), input.getEmail(), passwordEncoder.encode(input.getPassword()), input.getFirstName(), input.getLastName(), input.getCin(), input.getNationality());
+
+//        if (userRepository.findByCin(input.getCin()).isPresent()) {
+//            throw new CredentialsAlreadyExistException("CIN already registered");
+//        }
+
+        AppUser user = new AppUser(input.getProfileIdentifier(), input.getEmail(), passwordEncoder.encode(input.getPassword()), input.getFirstName(), input.getLastName(), input.getPhoneNumber());
+
+        Set<Role> roles = new HashSet<>();
+        roles.add(Role.BIDDER);  // Default role
+        user.setRoles(roles);
+
         user.setVerificationCode(generateVerificationCode());
         user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(15));
         user.setEnabled(false);
-        user.setRole(Role.MEMBER);
         sendVerificationEmail(user);
         return userRepository.save(user);
     }

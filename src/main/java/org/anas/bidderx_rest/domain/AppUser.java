@@ -1,15 +1,14 @@
 package org.anas.bidderx_rest.domain;
 
 import jakarta.persistence.*;
+import org.anas.bidderx_rest.config.RoleAuthorityMapper;
 import org.anas.bidderx_rest.domain.enums.Role;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "\"users\"")
@@ -18,12 +17,17 @@ public class AppUser implements UserDetails {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "user_roles", // Custom table name for roles
+            joinColumns = @JoinColumn(name = "user_id") // Foreign key to AppUser table
+    )
     @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false)
-    private Role role;
+    @Column(name = "role") // Custom column name for the role value
+    private Set<Role> roles = new HashSet<>();
 
-    @Column(name = "username", nullable = false, unique = true)
-    private String username;
+    @Column(name = "profile_identifier", nullable = false, unique = true)
+    private String profileIdentifier;
 
     @Column(name = "email", nullable = false, unique = true)
     private String email;
@@ -65,15 +69,21 @@ public class AppUser implements UserDetails {
     // Constructors
     public AppUser() {}
 
-    public AppUser(String username, String email, String password) {
-        this.username = username;
+    public AppUser(String profileIdentifier, String email, String password, String firstName, String lastName, String phoneNumber) {
+        this.profileIdentifier = profileIdentifier;
         this.email = email;
         this.password = password;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.phoneNumber = phoneNumber;
     }
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
+        return roles.stream()
+                .flatMap(role -> RoleAuthorityMapper.getAuthorities(role).stream())
+                .collect(Collectors.toSet());
     }
 
     // Optional: Helper method to add a collection
@@ -165,12 +175,20 @@ public class AppUser implements UserDetails {
         this.id = id;
     }
 
-    public Role getRole() {
-        return role;
+    public Set<Role> getRoles() {
+        return roles;
     }
 
-    public void setRole(Role role) {
-        this.role = role;
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
+    }
+
+    public String getProfileIdentifier() {
+        return profileIdentifier;
+    }
+
+    public void setProfileIdentifier(String profileIdentifier) {
+        this.profileIdentifier = profileIdentifier;
     }
 
     public String getVerificationCode() {
@@ -198,13 +216,18 @@ public class AppUser implements UserDetails {
         this.enabled = enabled;
     }
 
+    @Override
     public String getUsername() {
-        return username;
+        return email;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+//    public String getUsername() {
+//        return username;
+//    }
+//
+//    public void setUsername(String username) {
+//        this.username = username;
+//    }
 
     public String getFirstName() {
         return firstName;

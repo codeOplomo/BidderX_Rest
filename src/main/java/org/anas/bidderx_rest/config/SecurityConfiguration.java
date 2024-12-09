@@ -38,8 +38,7 @@ public class SecurityConfiguration {
     @Bean
     public RoleHierarchy roleHierarchy() {
         RoleHierarchyImpl roleHierarchy = new RoleHierarchyImpl();
-        String hierarchy = "ROLE_ADMIN > ROLE_JURY \n ROLE_JURY > ROLE_MEMBER";
-        roleHierarchy.setHierarchy(hierarchy);
+        roleHierarchy.setHierarchy("ROLE_ADMIN > ROLE_OWNER \n ROLE_OWNER > ROLE_BIDDER");
         return roleHierarchy;
     }
 

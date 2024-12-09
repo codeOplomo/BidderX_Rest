@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1733747877
+      author: QLIKY
+      changes:
+        - createTable:
+            tableName: tags
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false

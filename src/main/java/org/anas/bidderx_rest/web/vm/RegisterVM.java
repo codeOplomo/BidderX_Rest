@@ -12,10 +12,10 @@ import org.anas.bidderx_rest.annotations.UniqueUsername;
 
 public class RegisterVM {
 
-    @NotBlank(message = "Username is required")
-    @Size(min = 4, max = 255, message = "Username must be between 4 and 255 characters")
-    @UniqueUsername
-    private String username;
+    @NotBlank(message = "Email is required")
+    @Email(message = "Email should be valid")
+    @UniqueEmail
+    private String email;
 
     @NotBlank(message = "Password is required")
     @Size(min = 8, message = "Password must be at least 8 characters")
@@ -25,6 +25,11 @@ public class RegisterVM {
     )
     private String password;
 
+    @NotBlank(message = "Profile Identifier is required")
+    @Size(min = 4, max = 255, message = "Profile Identifier must be between 4 and 255 characters")
+//    @UniqueUsername
+    private String profileIdentifier;
+
     @NotBlank(message = "First name is required")
     @Size(max = 255, message = "First name cannot exceed 255 characters")
     private String firstName;
@@ -33,27 +38,12 @@ public class RegisterVM {
     @Size(max = 255, message = "Last name cannot exceed 255 characters")
     private String lastName;
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Email should be valid")
-    @UniqueEmail
-    private String email;
+    @NotBlank(message = "Phone number is required")
+    @Pattern(regexp = "^\\+?[0-9]{10,14}$", message = "Invalid phone number")
+    private String phoneNumber;
 
-    @NotBlank(message = "Nationality is required")
-    private String nationality;
-
-    @NotBlank(message = "CIN is required")
-//    @UniqueCin
-    private String cin;
 
     // Getters and Setters
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
     public String getPassword() {
         return password;
     }
@@ -86,19 +76,19 @@ public class RegisterVM {
         this.email = email;
     }
 
-    public String getNationality() {
-        return nationality;
+    public String getProfileIdentifier() {
+        return profileIdentifier;
     }
 
-    public void setNationality(String nationality) {
-        this.nationality = nationality;
+    public void setProfileIdentifier(String profileIdentifier) {
+        this.profileIdentifier = profileIdentifier;
     }
 
-    public String getCin() {
-        return cin;
+    public String getPhoneNumber() {
+        return phoneNumber;
     }
 
-    public void setCin(String cin) {
-        this.cin = cin;
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 }

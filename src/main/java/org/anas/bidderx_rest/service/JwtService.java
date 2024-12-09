@@ -11,11 +11,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class JwtService {
@@ -51,15 +49,20 @@ public class JwtService {
             UserDetails userDetails,
             long expiration
     ) {
-        UUID userId = ((AppUser) userDetails).getId();
-        String role = "ROLE_" + ((AppUser) userDetails).getRole().name(); // Ensure "ROLE_" prefix
+        AppUser appUser = (AppUser) userDetails; // Cast UserDetails to AppUser
+        UUID userId = appUser.getId();
+
+        List<String> roles = appUser.getRoles()
+                .stream()
+                .map(role -> "ROLE_" + role.name())
+                .collect(Collectors.toList());
 
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
                 .claim("id", userId.toString())
-                .claim("role", role)
+                .claim("roles", roles)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)

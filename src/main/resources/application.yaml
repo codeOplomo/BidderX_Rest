@@ -1,0 +1,50 @@
+spring:
+  # Data source configuration
+  # datasource:
+  #   url: jdbc:postgresql://localhost:5432/hunters_league_db
+  #   username: admin
+  #   password: admin
+  #   driver-class-name: org.postgresql.Driver
+
+  # Docker compose configuration
+  docker:
+    compose:
+      file: src/main/docker/compose.yaml
+      enabled: true
+      lifecycle-management: start_only
+
+  # Liquibase configuration
+  liquibase:
+    change-log: db/changelog/master.yaml
+    enabled: false
+
+    # Exclude auto-configuration for security
+    #autoconfigure:
+    # exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+
+  # Mail properties
+  mail:
+    host: sandbox.smtp.mailtrap.io
+    port: 587
+    username: ${SUPPORT_USERNAME}
+    password: ${APP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+        debug: true
+
+  # Optional external configuration file import
+  config:
+    import: optional:file:.env[.properties]
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+# JWT security configuration
+security:
+  jwt:
+    secret-key: ${JWT_SECRET_KEY}
+    expiration-time: 3600000

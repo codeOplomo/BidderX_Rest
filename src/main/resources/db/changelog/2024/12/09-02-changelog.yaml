@@ -1,0 +1,65 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1733746990
+      author: QLIKY
+      changes:
+        - createTable:
+            tableName: "users"
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: profile_identifier
+                  type: varchar(255)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: email
+                  type: varchar(255)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: password
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: first_name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: phone_number
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_active
+                  type: boolean
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_banned
+                  type: boolean
+                  constraints:
+                    nullable: false
+              - column:
+                  name: verification_code
+                  type: varchar(255)
+              - column:
+                  name: verification_expiration
+                  type: datetime
+              - column:
+                  name: enabled
+                  type: boolean
