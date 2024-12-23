@@ -53,12 +53,6 @@ public class SecurityConfiguration {
                 )
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) -> {
-                            System.out.println("Authentication Entry Point - Authentication Error: " + authException.getMessage());
-                            System.out.println("Current Authentication: " +
-                                    (SecurityContextHolder.getContext().getAuthentication() != null
-                                            ? SecurityContextHolder.getContext().getAuthentication().getName()
-                                            : "No Authentication"));
-
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             response.getWriter().write("Unauthorized: " + authException.getMessage());
                         })

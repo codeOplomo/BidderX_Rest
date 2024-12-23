@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1734604897
+      author: QLIKY
+      changes:
+        - addColumn:
+            tableName: "users"
+            columns:
+              - column:
+                  name: image_name
+                  type: varchar(255)
+              - column:
+                  name: image_type
+                  type: varchar(255)
+              - column:
+                  name: image_data
+                  type: bytea

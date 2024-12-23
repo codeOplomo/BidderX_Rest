@@ -1,5 +1,6 @@
 package org.anas.bidderx_rest.service;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.mail.MessagingException;
 import org.anas.bidderx_rest.domain.AppUser;
 import org.anas.bidderx_rest.domain.enums.Role;
@@ -7,11 +8,15 @@ import org.anas.bidderx_rest.exceptions.CredentialsAlreadyExistException;
 import org.anas.bidderx_rest.exceptions.UserNotFoundException;
 import org.anas.bidderx_rest.exceptions.VerificationCodeException;
 import org.anas.bidderx_rest.repository.AppUserRepository;
+import org.anas.bidderx_rest.service.dto.RefreshTokenResponseDTO;
+import org.anas.bidderx_rest.service.dto.TokenResponseDTO;
 import org.anas.bidderx_rest.web.vm.LoginVM;
 import org.anas.bidderx_rest.web.vm.RegisterVM;
 import org.anas.bidderx_rest.web.vm.VerifyUserVM;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -27,30 +32,50 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
+    private final JwtService jwtService;
+    private final UserDetailsService userService;
 
     public AuthenticationService(
             AppUserRepository userRepository,
             AuthenticationManager authenticationManager,
             PasswordEncoder passwordEncoder,
-            EmailService emailService
+            EmailService emailService,
+            JwtService jwtService,
+            UserDetailsService userService
     ) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
+        this.jwtService = jwtService;
+        this.userService = userService;
+    }
+
+    public RefreshTokenResponseDTO refreshTokens(String refreshToken) {
+        try {
+            // Validate refresh token
+            if (!jwtService.isRefreshTokenValid(refreshToken)) {
+                return new RefreshTokenResponseDTO(); // Returns null newAccessToken
+            }
+
+            // Extract user details and generate a new access token
+            UserDetails userDetails = userService.loadUserByUsername(
+                    jwtService.extractUsername(refreshToken, jwtService.getRefreshSecretKey())
+            );
+
+            String newAccessToken = jwtService.generateAccessToken(userDetails);
+
+            // Return the new access token
+            return new RefreshTokenResponseDTO(newAccessToken);
+        } catch (Exception e) {
+            return new RefreshTokenResponseDTO();
+        }
     }
 
     public AppUser signup(RegisterVM input) {
-//        if (userRepository.findByUsername(input.getUsername()).isPresent()) {
-//            throw new CredentialsAlreadyExistException("Username already exists");
-//        }
         if (userRepository.findByEmail(input.getEmail()).isPresent()) {
             throw new CredentialsAlreadyExistException("Email already in use");
         }
-
-//        if (userRepository.findByCin(input.getCin()).isPresent()) {
-//            throw new CredentialsAlreadyExistException("CIN already registered");
-//        }
 
         AppUser user = new AppUser(input.getProfileIdentifier(), input.getEmail(), passwordEncoder.encode(input.getPassword()), input.getFirstName(), input.getLastName(), input.getPhoneNumber());
 

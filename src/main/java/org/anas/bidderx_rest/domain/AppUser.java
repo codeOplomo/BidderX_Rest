@@ -66,6 +66,14 @@ public class AppUser implements UserDetails {
     private LocalDateTime verificationCodeExpiresAt;
     private boolean enabled;
 
+//    @Column(name="image_name", nullable = true)
+//    private String imageName;
+//    @Column(name="image_type", nullable = true)
+//    private String imageType;
+//    @Column(name="image_data", columnDefinition = "BYTEA")
+//    @Lob
+//    private byte[] imageData;
+
     // Constructors
     public AppUser() {}
 
@@ -309,4 +317,27 @@ public class AppUser implements UserDetails {
         this.auctionReactions = auctionReactions;
     }
 
+//    public String getImageName() {
+//        return imageName;
+//    }
+//
+//    public void setImageName(String imageName) {
+//        this.imageName = imageName;
+//    }
+//
+//    public String getImageType() {
+//        return imageType;
+//    }
+//
+//    public void setImageType(String imageType) {
+//        this.imageType = imageType;
+//    }
+//
+//    public byte[] getImageData() {
+//        return imageData;
+//    }
+//
+//    public void setImageData(byte[] imageData) {
+//        this.imageData = imageData;
+//    }
 }
