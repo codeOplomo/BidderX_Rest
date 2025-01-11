@@ -9,11 +9,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface UserService {
-    ProfileDTO uploadUserProfileImage(Authentication authentication, MultipartFile imageFile);
+    void uploadProfileImage(String username, String imageUrl);
+
+    void uploadCoverImage(String username, String imageUrl);
 
     ProfileDTO getUserProfile(String email);
 
-    ProfileDTO updateUserProfile(Authentication authentication, ProfileUpdateVM profileUpdateVM);
+    ProfileDTO updateUserProfile(String email, ProfileUpdateVM profileUpdate);
 
-    void updateUserPassword(Authentication authentication, PasswordUpdateVM passwordUpdateVM);
+    void updateUserPassword(String email, PasswordUpdateVM passwordUpdate);
+
 }

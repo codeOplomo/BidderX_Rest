@@ -2,19 +2,15 @@ package org.anas.bidderx_rest.service.implementations;
 
 import jakarta.transaction.Transactional;
 import org.anas.bidderx_rest.domain.AppUser;
-import org.anas.bidderx_rest.exceptions.EmailAlreadyExistException;
-import org.anas.bidderx_rest.exceptions.InvalidPasswordException;
-import org.anas.bidderx_rest.exceptions.UserNotFoundException;
+import org.anas.bidderx_rest.exceptions.*;
 import org.anas.bidderx_rest.repository.AppUserRepository;
 import org.anas.bidderx_rest.service.UserService;
 import org.anas.bidderx_rest.service.dto.ProfileDTO;
 import org.anas.bidderx_rest.service.dto.mapper.AppUserMapper;
 import org.anas.bidderx_rest.web.vm.PasswordUpdateVM;
 import org.anas.bidderx_rest.web.vm.ProfileUpdateVM;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -31,75 +27,72 @@ public class UserServiceImpl implements UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    @Transactional
-    public ProfileDTO uploadUserProfileImage(Authentication authentication, MultipartFile imageFile) {
-        // Get the current authenticated user
-        String currentUsername = authentication.getName();
-        AppUser currentUser = userRepository.findByEmail(currentUsername)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
-
-        // Validate image file
-        String contentType = imageFile.getContentType();
-        if (contentType == null || (!contentType.startsWith("image/"))) {
-            throw new IllegalArgumentException("Uploaded file is not a valid image");
-        }
-
-        // Store image details
-//            currentUser.setImageName(imageFile.getOriginalFilename());
-//            currentUser.setImageType(imageFile.getContentType());
-//            currentUser.setImageData(imageFile.getBytes());
-
-        // Save the updated user
-        AppUser updatedUser = userRepository.save(currentUser);
-        return appUserMapper.toProfileDTO(updatedUser);
+    @Override
+    public ProfileDTO getUserProfile(String email) {
+        return appUserMapper.toProfileDTO(findUserByEmail(email));
     }
 
     @Override
-    public ProfileDTO getUserProfile(String email) {
-        AppUser user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
-        return appUserMapper.toProfileDTO(user);
+    public void uploadProfileImage(String username, String imageUrl) {
+        AppUser user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setImageUrl(imageUrl);
+        userRepository.save(user);
     }
 
-    @Transactional
-    public ProfileDTO updateUserProfile(
-            Authentication authentication,
-            ProfileUpdateVM profileUpdateVM
-    ) {
-        // Get the current authenticated user
-        String currentUsername = authentication.getName();
-        AppUser currentUser = userRepository.findByEmail(currentUsername)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+    @Override
+    public void uploadCoverImage(String username, String imageUrl) {
+        AppUser user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Update user details
-        currentUser.setProfileIdentifier(profileUpdateVM.getProfileIdentifier());
-        currentUser.setFirstName(profileUpdateVM.getFirstName());
-        currentUser.setLastName(profileUpdateVM.getLastName());
-        currentUser.setPhoneNumber(profileUpdateVM.getPhoneNumber());
-
-        AppUser updatedUser = userRepository.save(currentUser);
-        return appUserMapper.toProfileDTO(updatedUser);
+        user.setCoverImageUrl(imageUrl);
+        userRepository.save(user);
     }
 
+    @Override
     @Transactional
-    public void updateUserPassword(
-            Authentication authentication,
-            PasswordUpdateVM passwordUpdateVM
-    ) {
-        // Get the current authenticated user
-        String currentUsername = authentication.getName();
-        AppUser currentUser = userRepository.findByEmail(currentUsername)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+    public ProfileDTO updateUserProfile(String email, ProfileUpdateVM profileUpdate) {
+        AppUser user = findUserByEmail(email);
 
-        // Verify the old password
-        if (!passwordEncoder.matches(passwordUpdateVM.getOldPassword(), currentUser.getPassword())) {
+        user.setProfileIdentifier(profileUpdate.getProfileIdentifier());
+        user.setFirstName(profileUpdate.getFirstName());
+        user.setLastName(profileUpdate.getLastName());
+        user.setPhoneNumber(profileUpdate.getPhoneNumber());
+
+        return appUserMapper.toProfileDTO(userRepository.save(user));
+    }
+
+
+    @Override
+    @Transactional
+    public void updateUserPassword(String email, PasswordUpdateVM passwordUpdate) {
+        AppUser user = findUserByEmail(email);
+
+        if (!passwordEncoder.matches(passwordUpdate.getOldPassword(), user.getPassword())) {
             throw new InvalidPasswordException("Current password is incorrect");
         }
 
-        // Encode and set the new password
-        String encodedNewPassword = passwordEncoder.encode(passwordUpdateVM.getNewPassword());
-        currentUser.setPassword(encodedNewPassword);
-
-        userRepository.save(currentUser);
+        user.setPassword(passwordEncoder.encode(passwordUpdate.getNewPassword()));
+        userRepository.save(user);
     }
+
+    private AppUser findUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+    }
+
+    private void validateImageFile(MultipartFile imageFile) {
+        if (imageFile == null || imageFile.isEmpty()) {
+            throw new InvalidFileException("Image file is required");
+        }
+
+        String contentType = imageFile.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new InvalidFileException("Uploaded file is not a valid image");
+        }
+
+        // Add additional validation if needed (file size, dimensions, etc.)
+    }
+
 }

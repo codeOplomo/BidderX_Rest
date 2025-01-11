@@ -66,6 +66,10 @@ public class AppUser implements UserDetails {
     private LocalDateTime verificationCodeExpiresAt;
     private boolean enabled;
 
+    private String imageUrl;
+
+    private String coverImageUrl;
+
 //    @Column(name="image_name", nullable = true)
 //    private String imageName;
 //    @Column(name="image_type", nullable = true)
@@ -307,6 +311,22 @@ public class AppUser implements UserDetails {
 
     public void setBids(List<Bid> bids) {
         this.bids = bids;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public String getCoverImageUrl() {
+        return coverImageUrl;
+    }
+
+    public void setCoverImageUrl(String coverImageUrl) {
+        this.coverImageUrl = coverImageUrl;
     }
 
     public List<AuctionReaction> getAuctionReactions() {

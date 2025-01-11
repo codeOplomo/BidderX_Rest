@@ -30,6 +30,8 @@ public class AppCollection {
     @JoinColumn(name = "user_id", nullable = false)
     private AppUser appUser;
 
+    private String imageUrl;
+
     // Constructors
     public AppCollection() {
     }
@@ -139,4 +141,11 @@ public class AppCollection {
         this.description = description;
     }
 
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
 }

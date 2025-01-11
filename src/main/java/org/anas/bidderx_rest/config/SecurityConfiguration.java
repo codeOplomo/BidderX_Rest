@@ -49,6 +49,9 @@ public class SecurityConfiguration {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/uploads/profile-images/**").permitAll()
+                        .requestMatchers("/api/uploads/cover-images/**").permitAll()
+                        .requestMatchers("/api/uploads/collection-cover-images/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex

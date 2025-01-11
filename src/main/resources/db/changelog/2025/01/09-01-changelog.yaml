@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1736429677
+      author: QLIKY
+      changes:
+        - addColumn:
+            tableName: "users"
+            columns:
+              - column:
+                  name: cover_image_url
+                  type: varchar(255)
+                  constraints:
+                    nullable: true
