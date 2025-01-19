@@ -33,19 +33,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void uploadProfileImage(String username, String imageUrl) {
-        AppUser user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
+    @Transactional
+    public void uploadProfileImage(AppUser user, String imageUrl) {
         user.setImageUrl(imageUrl);
         userRepository.save(user);
     }
 
     @Override
-    public void uploadCoverImage(String username, String imageUrl) {
-        AppUser user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
+    @Transactional
+    public void uploadCoverImage(AppUser user, String imageUrl) {
         user.setCoverImageUrl(imageUrl);
         userRepository.save(user);
     }

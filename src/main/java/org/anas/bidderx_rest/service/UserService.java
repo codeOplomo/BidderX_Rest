@@ -9,9 +9,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface UserService {
-    void uploadProfileImage(String username, String imageUrl);
+    void uploadProfileImage(AppUser user, String imageUrl);
 
-    void uploadCoverImage(String username, String imageUrl);
+    void uploadCoverImage(AppUser user, String imageUrl);
 
     ProfileDTO getUserProfile(String email);
 

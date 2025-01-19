@@ -11,6 +11,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 
@@ -22,6 +23,13 @@ public class CollectionController {
     public CollectionController(CollectionService collectionService) {
         this.collectionService = collectionService;
     }
+
+    @GetMapping("/user")
+    public ResponseEntity<ApiResponse<List<CollectionDTO>>> getCollectionsByEmail(@RequestParam String email) {
+        List<CollectionDTO> collections = collectionService.getCollectionsByEmail(email);
+        return ResponseEntity.ok(new ApiResponse<>("Collections retrieved successfully", collections));
+    }
+
 
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<CollectionDTO>> createCollection(
