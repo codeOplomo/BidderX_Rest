@@ -1,0 +1,48 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1733747429
+      author: QLIKY
+      changes:
+        - createTable:
+            tableName: auctions
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: product_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    unique: true
+                    references: products(id)
+                    foreignKeyName: fk_auction_product
+              - column:
+                  name: title
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: start_time
+                  type: datetime
+              - column:
+                  name: end_time
+                  type: datetime
+              - column:
+                  name: starting_price
+                  type: decimal(19,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: current_price
+                  type: decimal(19,2)
+                  constraints:
+                    nullable: false

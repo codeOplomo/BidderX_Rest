@@ -1,0 +1,42 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1733747758
+      author: QLIKY
+      changes:
+        - createTable:
+            tableName: payments
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: amount
+                  type: decimal(19,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: payment_date
+                  type: datetime
+                  constraints:
+                    nullable: false
+              - column:
+                  name: payment_method
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: transaction_status
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: auction_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    unique: true
+                    references: auctions(id)
+                    foreignKeyName: fk_payment_auction

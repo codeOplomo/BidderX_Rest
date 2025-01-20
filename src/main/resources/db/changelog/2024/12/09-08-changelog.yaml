@@ -1,0 +1,38 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1733747625
+      author: QLIKY
+      changes:
+        - createTable:
+            tableName: bids
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: auction_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    references: auctions(id)
+                    foreignKeyName: fk_bid_auction
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    references: users(id)
+                    foreignKeyName: fk_bid_user
+              - column:
+                  name: bid_amount
+                  type: decimal(19,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: bid_time
+                  type: datetime
+                  constraints:
+                    nullable: false

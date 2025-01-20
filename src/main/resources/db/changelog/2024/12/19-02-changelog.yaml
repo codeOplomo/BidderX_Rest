@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1733746992
+      author: QLIKY
+      changes:
+        - modifyDataType:
+            tableName: "users"
+            columnName: "image_data"
+            newDataType: BYTEA

@@ -40,12 +40,12 @@ public class Product {
     public Product() {
     }
 
-    public void addToCollection(Collection collection) {
-        if (collection != null) {
+    public void addToCollection(AppCollection appCollection) {
+        if (appCollection != null) {
             // Create a new ProductCollection instance
             ProductCollection productCollection = new ProductCollection();
             productCollection.setProduct(this);
-            productCollection.setCollection(collection);
+            productCollection.setCollection(appCollection);
             productCollection.setAddedAt(LocalDateTime.now());
 
             // Ensure productCollections list is initialized
@@ -59,17 +59,17 @@ public class Product {
     }
 
     // Method to remove product from a specific collection
-    public void removeFromCollection(Collection collection) {
-        if (collection != null && this.productCollections != null) {
+    public void removeFromCollection(AppCollection appCollection) {
+        if (appCollection != null && this.productCollections != null) {
             // Remove matching ProductCollection entries
             this.productCollections.removeIf(pc ->
-                    pc.getCollection().equals(collection)
+                    pc.getCollection().equals(appCollection)
             );
         }
     }
 
     // Method to get collections this product belongs to
-    public List<Collection> getCollections() {
+    public List<AppCollection> getCollections() {
         if (this.productCollections == null) {
             return Collections.emptyList();
         }
@@ -113,12 +113,12 @@ public class Product {
     }
 
     // Check if product is in a specific collection
-    public boolean isInCollection(Collection collection) {
-        if (this.productCollections == null || collection == null) {
+    public boolean isInCollection(AppCollection appCollection) {
+        if (this.productCollections == null || appCollection == null) {
             return false;
         }
         return this.productCollections.stream()
-                .anyMatch(pc -> pc.getCollection().equals(collection));
+                .anyMatch(pc -> pc.getCollection().equals(appCollection));
     }
 
     public Category getCategory() {

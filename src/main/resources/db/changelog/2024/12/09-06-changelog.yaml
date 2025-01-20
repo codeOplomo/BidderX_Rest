@@ -1,0 +1,31 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1733747333
+      author: QLIKY
+      changes:
+        - createTable:
+            tableName: product_collection
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: product_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    references: products(id)
+                    foreignKeyName: fk_product_collection_product
+              - column:
+                  name: collection_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    references: collections(id)
+                    foreignKeyName: fk_product_collection_collection
+              - column:
+                  name: added_at
+                  type: datetime

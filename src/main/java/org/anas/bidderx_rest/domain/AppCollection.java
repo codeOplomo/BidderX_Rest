@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "collections")
-public class Collection {
+public class AppCollection {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -22,7 +22,7 @@ public class Collection {
     @Column(name = "description")
     private String description;
 
-    @OneToMany(mappedBy = "collection", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "appCollection", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductCollection> productCollections;
 
     // Many-to-One relationship with User
@@ -30,8 +30,10 @@ public class Collection {
     @JoinColumn(name = "user_id", nullable = false)
     private AppUser appUser;
 
+    private String imageUrl;
+
     // Constructors
-    public Collection() {
+    public AppCollection() {
     }
 
     // Method to add a product to the collection
@@ -139,4 +141,11 @@ public class Collection {
         this.description = description;
     }
 
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
 }

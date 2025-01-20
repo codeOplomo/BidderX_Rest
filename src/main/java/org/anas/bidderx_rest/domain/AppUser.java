@@ -1,26 +1,33 @@
 package org.anas.bidderx_rest.domain;
 
 import jakarta.persistence.*;
+import org.anas.bidderx_rest.config.RoleAuthorityMapper;
 import org.anas.bidderx_rest.domain.enums.Role;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "\"users\"")
-public class AppUser {
+public class AppUser implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "user_roles", // Custom table name for roles
+            joinColumns = @JoinColumn(name = "user_id") // Foreign key to AppUser table
+    )
     @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false)
-    private Role role;
+    @Column(name = "role") // Custom column name for the role value
+    private Set<Role> roles = new HashSet<>();
 
-    @Column(name = "username", nullable = false, unique = true)
-    private String username;
+    @Column(name = "profile_identifier", nullable = false, unique = true)
+    private String profileIdentifier;
 
     @Column(name = "email", nullable = false, unique = true)
     private String email;
@@ -45,7 +52,7 @@ public class AppUser {
 
     // One-to-Many relationship with Collection
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Collection> collections = new ArrayList<>();
+    private List<AppCollection> collections = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Bid> bids = new ArrayList<>();
@@ -59,17 +66,40 @@ public class AppUser {
     private LocalDateTime verificationCodeExpiresAt;
     private boolean enabled;
 
+    private String imageUrl;
+
+    private String coverImageUrl;
+
+//    @Column(name="image_name", nullable = true)
+//    private String imageName;
+//    @Column(name="image_type", nullable = true)
+//    private String imageType;
+//    @Column(name="image_data", columnDefinition = "BYTEA")
+//    @Lob
+//    private byte[] imageData;
+
     // Constructors
     public AppUser() {}
 
-    public AppUser(String username, String email, String password) {
-        this.username = username;
+    public AppUser(String profileIdentifier, String email, String password, String firstName, String lastName, String phoneNumber) {
+        this.profileIdentifier = profileIdentifier;
         this.email = email;
         this.password = password;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.phoneNumber = phoneNumber;
+    }
+
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return roles.stream()
+                .flatMap(role -> RoleAuthorityMapper.getAuthorities(role).stream())
+                .collect(Collectors.toSet());
     }
 
     // Optional: Helper method to add a collection
-    public void addCollection(Collection collection) {
+    public void addCollection(AppCollection collection) {
         if (collection != null) {
             this.collections.add(collection);
             collection.setAppUser(this);
@@ -77,7 +107,7 @@ public class AppUser {
     }
 
     // Helper method to remove a collection
-    public void removeCollection(Collection collection) {
+    public void removeCollection(AppCollection collection) {
         if (collection != null) {
             this.collections.remove(collection);
             collection.setAppUser(null);
@@ -157,13 +187,59 @@ public class AppUser {
         this.id = id;
     }
 
-    public String getUsername() {
-        return username;
+    public Set<Role> getRoles() {
+        return roles;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
     }
+
+    public String getProfileIdentifier() {
+        return profileIdentifier;
+    }
+
+    public void setProfileIdentifier(String profileIdentifier) {
+        this.profileIdentifier = profileIdentifier;
+    }
+
+    public String getVerificationCode() {
+        return verificationCode;
+    }
+
+    public void setVerificationCode(String verificationCode) {
+        this.verificationCode = verificationCode;
+    }
+
+    public LocalDateTime getVerificationCodeExpiresAt() {
+        return verificationCodeExpiresAt;
+    }
+
+    public void setVerificationCodeExpiresAt(LocalDateTime verificationCodeExpiresAt) {
+        this.verificationCodeExpiresAt = verificationCodeExpiresAt;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    @Override
+    public String getUsername() {
+        return email;
+    }
+
+//    public String getUsername() {
+//        return username;
+//    }
+//
+//    public void setUsername(String username) {
+//        this.username = username;
+//    }
 
     public String getFirstName() {
         return firstName;
@@ -221,11 +297,11 @@ public class AppUser {
         this.password = password;
     }
 
-    public List<Collection> getCollections() {
+    public List<AppCollection> getCollections() {
         return collections;
     }
 
-    public void setCollections(List<Collection> collections) {
+    public void setCollections(List<AppCollection> collections) {
         this.collections = collections;
     }
 
@@ -237,6 +313,22 @@ public class AppUser {
         this.bids = bids;
     }
 
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public String getCoverImageUrl() {
+        return coverImageUrl;
+    }
+
+    public void setCoverImageUrl(String coverImageUrl) {
+        this.coverImageUrl = coverImageUrl;
+    }
+
     public List<AuctionReaction> getAuctionReactions() {
         return auctionReactions;
     }
@@ -245,4 +337,27 @@ public class AppUser {
         this.auctionReactions = auctionReactions;
     }
 
+//    public String getImageName() {
+//        return imageName;
+//    }
+//
+//    public void setImageName(String imageName) {
+//        this.imageName = imageName;
+//    }
+//
+//    public String getImageType() {
+//        return imageType;
+//    }
+//
+//    public void setImageType(String imageType) {
+//        this.imageType = imageType;
+//    }
+//
+//    public byte[] getImageData() {
+//        return imageData;
+//    }
+//
+//    public void setImageData(byte[] imageData) {
+//        this.imageData = imageData;
+//    }
 }

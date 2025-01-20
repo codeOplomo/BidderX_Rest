@@ -20,7 +20,7 @@ public class ProductCollection
 
     @ManyToOne
     @JoinColumn(name = "collection_id", nullable = false)
-    private Collection collection;
+    private AppCollection appCollection;
 
     // Additional fields if needed, like added timestamp, etc.
     @Column(name = "added_at")
@@ -31,7 +31,7 @@ public class ProductCollection
 
     public boolean isValid() {
         return this.product != null
-                && this.collection != null
+                && this.appCollection != null
                 && this.addedAt != null;
     }
 
@@ -48,9 +48,9 @@ public class ProductCollection
         this.addedAt = LocalDateTime.now();
     }
 
-    public ProductCollection(Product product, Collection collection) {
+    public ProductCollection(Product product, AppCollection appCollection) {
         this.product = product;
-        this.collection = collection;
+        this.appCollection = appCollection;
         this.addedAt = LocalDateTime.now();
     }
 
@@ -72,12 +72,12 @@ public class ProductCollection
         this.product = product;
     }
 
-    public Collection getCollection() {
-        return collection;
+    public AppCollection getCollection() {
+        return appCollection;
     }
 
-    public void setCollection(Collection collection) {
-        this.collection = collection;
+    public void setCollection(AppCollection appCollection) {
+        this.appCollection = appCollection;
     }
 
     public LocalDateTime getAddedAt() {

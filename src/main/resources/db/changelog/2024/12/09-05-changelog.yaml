@@ -1,0 +1,46 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1733747250
+      author: QLIKY
+      changes:
+        - createTable:
+            tableName: products
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: title
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: condition
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: manufacturer
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: production_date
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: category_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    references: categories(id)
+                    foreignKeyName: fk_product_category
