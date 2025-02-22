@@ -1,0 +1,46 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1739746479
+      author: QLIKY
+      changes:
+        - createTable:
+            tableName: featured_images
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: image_url
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: entity_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: entity_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+
+  - changeSet:
+      id: 1739746480
+      author: QLIKY
+      changes:
+        - createIndex:
+            indexName: idx_featured_images_entity
+            tableName: featured_images
+            columns:
+              - column:
+                  name: entity_type
+              - column:
+                  name: entity_id

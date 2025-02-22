@@ -31,6 +31,23 @@ public class CollectionServiceImpl implements CollectionService {
     }
 
 
+
+    public CollectionDTO getCollectionById(UUID id) {
+        AppCollection collection = collectionRepository.findByIdWithProducts(id)
+                .orElseThrow(() -> new AppCollectionNotFound("Collection not found"));
+
+        return collectionMapper.toCollectionDTO(collection);
+    }
+
+    public List<CollectionDTO> getCollectionsByEmail(String email) {
+        AppUser user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User with email " + email + " not found"));
+        List<AppCollection> collections = collectionRepository.findByAppUser(user);
+        return collections.stream()
+                .map(collectionMapper::toCollectionDTO)
+                .collect(Collectors.toList());
+    }
+
     @Override
     @Transactional
     public void uploadShowcaseImage(UUID collectionId, String imageUrl) {
@@ -42,15 +59,6 @@ public class CollectionServiceImpl implements CollectionService {
         // Update the collection's image URL
         showcaseCollection.setImageUrl(imageUrl);
         collectionRepository.save(showcaseCollection);
-    }
-
-    public List<CollectionDTO> getCollectionsByEmail(String email) {
-        AppUser user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User with email " + email + " not found"));
-        List<AppCollection> collections = collectionRepository.findByAppUser(user);
-        return collections.stream()
-                .map(collectionMapper::toCollectionDTO)
-                .collect(Collectors.toList());
     }
 
 
@@ -69,11 +77,4 @@ public class CollectionServiceImpl implements CollectionService {
         return collectionMapper.toCollectionDTO(savedCollection);
     }
 
-
-    public CollectionDTO getCollectionById(UUID id) {
-        AppCollection collection = collectionRepository.findByIdWithProducts(id)
-                .orElseThrow(() -> new AppCollectionNotFound("Collection not found"));
-
-        return collectionMapper.toCollectionDTO(collection);
-    }
 }

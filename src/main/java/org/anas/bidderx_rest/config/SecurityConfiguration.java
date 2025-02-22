@@ -3,6 +3,7 @@ package org.anas.bidderx_rest.config;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -52,6 +53,9 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/uploads/profile-images/**").permitAll()
                         .requestMatchers("/api/uploads/cover-images/**").permitAll()
                         .requestMatchers("/api/uploads/collection-cover-images/**").permitAll()
+                        .requestMatchers("/api/uploads/products/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/products/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/categories/*").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex

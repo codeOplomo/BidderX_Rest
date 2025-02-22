@@ -1,6 +1,7 @@
 package org.anas.bidderx_rest.domain;
 
 import jakarta.persistence.*;
+import org.anas.bidderx_rest.domain.enums.AuctionType;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -15,6 +16,10 @@ public class Auction {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "auction_type", nullable = false)
+    private AuctionType auctionType;
 
     @OneToOne
     @JoinColumn(name = "product_id", nullable = false, unique = true)
@@ -44,6 +49,9 @@ public class Auction {
     @Column(name = "current_price", nullable = false)
     private BigDecimal currentPrice;
 
+    @ManyToOne
+    @JoinColumn(name = "owner_id", nullable = false)
+    private AppUser owner;
 
     // Helper method to add a bid
     public void addBid(Bid bid) {
@@ -97,6 +105,14 @@ public class Auction {
 
     public void setId(UUID id) {
         this.id = id;
+    }
+
+    public AuctionType getAuctionType() {
+        return auctionType;
+    }
+
+    public void setAuctionType(AuctionType auctionType) {
+        this.auctionType = auctionType;
     }
 
     public Product getProduct() {
@@ -169,6 +185,14 @@ public class Auction {
 
     public void setCurrentPrice(BigDecimal currentPrice) {
         this.currentPrice = currentPrice;
+    }
+
+    public AppUser getOwner() {
+        return owner;
+    }
+
+    public void setOwner(AppUser owner) {
+        this.owner = owner;
     }
 }
 

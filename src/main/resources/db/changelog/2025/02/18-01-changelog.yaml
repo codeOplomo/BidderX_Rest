@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1739902500
+      author: QLIKY
+      changes:
+        - addColumn:
+            tableName: auctions
+            columns:
+              - column:
+                  name: auction_type
+                  type: varchar(20)
+                  defaultValue: TIMED
+                  constraints:
+                    nullable: false

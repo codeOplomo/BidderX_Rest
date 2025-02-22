@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1737554294
+      author: QLIKY
+      changes:
+        - addColumn:
+            tableName: auctions
+            columns:
+              - column:
+                  name: owner_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: auctions
+            baseColumnNames: owner_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_auction_owner

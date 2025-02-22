@@ -3,7 +3,9 @@ package org.anas.bidderx_rest.web.api;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.anas.bidderx_rest.domain.AppUser;
+import org.anas.bidderx_rest.domain.FeaturedImage;
 import org.anas.bidderx_rest.service.CollectionService;
+import org.anas.bidderx_rest.service.FeaturedImageService;
 import org.anas.bidderx_rest.service.FileStorageService;
 import org.anas.bidderx_rest.service.UserService;
 import org.anas.bidderx_rest.service.dto.ApiResponse;
@@ -21,11 +23,13 @@ public class ImageController {
     private final FileStorageService fileStorageService;
     private final UserService userService;
     private final CollectionService collectionService;
+    private final FeaturedImageService featuredImageService;
 
-    public ImageController(FileStorageService fileStorageService, UserService userService, CollectionService collectionService) {
+    public ImageController(FileStorageService fileStorageService, UserService userService, CollectionService collectionService, FeaturedImageService featuredImageService) {
         this.fileStorageService = fileStorageService;
         this.userService = userService;
         this.collectionService = collectionService;
+        this.featuredImageService = featuredImageService;
     }
 
     @PostMapping("/upload")
@@ -33,31 +37,36 @@ public class ImageController {
             @RequestPart("image") @Valid @NotNull MultipartFile image,
             @RequestParam(value = "type", required = false) String type,
             @RequestParam(value = "collectionId", required = false) UUID collectionId,
-            @AuthenticationPrincipal AppUser authenticatedUser // Accessing the authenticated user directly
+            @RequestParam(value = "productId", required = false) UUID productId,
+            @AuthenticationPrincipal AppUser authenticatedUser
     ) {
         System.out.println("Type: " + type); // Debugging output
         System.out.println("Collection ID: " + collectionId); // Debugging output
 
         // Determine the target folder
-        String targetFolder = "general";
-        if ("cover".equals(type)) {
-            targetFolder = "cover-images";
-        } else if ("profile".equals(type)) {
-            targetFolder = "profile-images";
-        } else if ("collection-cover".equals(type)) {
-            targetFolder = "collection-cover-images";
-        }
+        String targetFolder = switch (type) {
+            case "cover" -> "cover-images";
+            case "profile" -> "profile-images";
+            case "collection-cover" -> "collection-cover-images";
+            case "product-featured" -> "product-images/featured"; // Subfolder for featured images
+            default -> "general";
+        };
 
         // Store the file in the correct folder and get its URL
         String imageUrl = fileStorageService.storeFile(image, targetFolder);
 
         // Update the user's profile or cover image in the database
-        if ("cover".equals(type)) {
-            userService.uploadCoverImage(authenticatedUser, imageUrl); // Using email from the authenticated user
-        } else if ("profile".equals(type)) {
-            userService.uploadProfileImage(authenticatedUser, imageUrl);
-        } else if ("collection-cover".equals(type) && collectionId != null) {
-            collectionService.uploadShowcaseImage(collectionId, imageUrl); // Use the collectionId
+        switch (type) {
+            case "cover" -> userService.uploadCoverImage(authenticatedUser, imageUrl);
+            case "profile" -> userService.uploadProfileImage(authenticatedUser, imageUrl);
+            case "collection-cover" -> collectionService.uploadShowcaseImage(collectionId, imageUrl);
+            case "product-featured" -> {
+                if (productId == null) {
+                    throw new IllegalArgumentException("Product ID is required for featured images");
+                }
+                featuredImageService.saveFeaturedImage(productId, "product", imageUrl);
+            }
+            // 'product-main' doesn't update here; handled during product creation
         }
 
         return ResponseEntity.ok(new ApiResponse<>("Image uploaded successfully", imageUrl));

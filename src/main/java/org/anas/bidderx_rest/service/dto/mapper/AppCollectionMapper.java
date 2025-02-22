@@ -12,12 +12,14 @@ public interface AppCollectionMapper {
 
 
     @Mapping(target = "items", source = "productCollections")
+    @Mapping(target = "owner", source = "appUser")
     @Mapping(target = "imageUrl", source = "imageUrl")
     CollectionDTO toCollectionDTO(AppCollection collection);
 
-//    @Mapping(target = "imageUrl", source = "product.imageUrl") // Assuming you have this field
+
     @Mapping(target = "id", source = "product.id")
     @Mapping(target = "name", source = "product.title")
     @Mapping(target = "description", source = "product.description")
+    @Mapping(target = "imageUrl", source = "product.imageUrl")
     ItemDTO toItemDTO(ProductCollection productCollection);
 }

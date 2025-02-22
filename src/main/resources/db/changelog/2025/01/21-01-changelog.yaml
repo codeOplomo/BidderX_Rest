@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1737453890
+      author: QLIKY
+      changes:
+        - addColumn:
+            tableName: products
+            columns:
+              - column:
+                  name: image_url
+                  type: varchar(255)
+                  constraints:
+                    nullable: true
