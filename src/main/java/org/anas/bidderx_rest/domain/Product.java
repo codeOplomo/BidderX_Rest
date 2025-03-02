@@ -29,12 +29,18 @@ public class Product {
     @Column(name = "production_date", nullable = false)
     private Date productionDate;
 
+    private String imageUrl;
+
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductCollection> productCollections;
+
+    @ManyToOne
+    @JoinColumn(name = "owner_id", nullable = false)
+    private AppUser owner;
 
     // Constructors
     public Product() {
@@ -183,5 +189,21 @@ public class Product {
 
     public void setProductionDate(Date productionDate) {
         this.productionDate = productionDate;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public AppUser getOwner() {
+        return owner;
+    }
+
+    public void setOwner(AppUser owner) {
+        this.owner = owner;
     }
 }

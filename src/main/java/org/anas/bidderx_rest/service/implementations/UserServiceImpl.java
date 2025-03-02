@@ -27,6 +27,11 @@ public class UserServiceImpl implements UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+
+    public AppUser findUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+    }
     @Override
     public ProfileDTO getUserProfile(String email) {
         return appUserMapper.toProfileDTO(findUserByEmail(email));
@@ -73,10 +78,6 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
-    private AppUser findUserByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
-    }
 
     private void validateImageFile(MultipartFile imageFile) {
         if (imageFile == null || imageFile.isEmpty()) {

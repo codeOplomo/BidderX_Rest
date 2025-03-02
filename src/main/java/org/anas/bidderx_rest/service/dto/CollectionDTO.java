@@ -8,6 +8,7 @@ public class CollectionDTO {
     private String name;
     private String description;
     private String imageUrl;
+    private ProfileDTO owner;
     private List<ItemDTO> items;
 
     // Constructors
@@ -27,6 +28,14 @@ public class CollectionDTO {
 
     public void setId(UUID id) {
         this.id = id;
+    }
+
+    public ProfileDTO getOwner() {
+        return owner;
+    }
+
+    public void setOwner(ProfileDTO owner) {
+        this.owner = owner;
     }
 
     public String getName() {

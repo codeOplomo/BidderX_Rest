@@ -72,4 +72,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ResponseMessageDTO> handleVerificationCodeException(VerificationCodeException exception) {
         return new ResponseEntity<>(new ResponseMessageDTO(exception.getMessage(), null), HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(InvalidBidException.class)
+    public ResponseEntity<ResponseMessageDTO> handleInvalidBidException(InvalidBidException exception) {
+        return new ResponseEntity<>(new ResponseMessageDTO(exception.getMessage(), null), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InvalidAuctionException.class)
+    public ResponseEntity<ResponseMessageDTO> handleInvalidAuctionException(InvalidAuctionException exception) {
+        return new ResponseEntity<>(new ResponseMessageDTO(exception.getMessage(), null), HttpStatus.BAD_REQUEST);
+    }
 }
