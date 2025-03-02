@@ -14,7 +14,6 @@ public class CreateAuctionVM {
     // Auction fields
     private String title;
     private String description;
-    private LocalDateTime startTime;
     private BigDecimal startingPrice;
     @JsonProperty("isInstantAuction")
     private boolean isInstantAuction;
@@ -74,14 +73,6 @@ public class CreateAuctionVM {
 
     public void setAuctionDurationInHours(Integer auctionDurationInHours) {
         this.auctionDurationInHours = auctionDurationInHours;
-    }
-
-    public LocalDateTime getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(LocalDateTime startTime) {
-        this.startTime = startTime;
     }
 
     public BigDecimal getStartingPrice() {

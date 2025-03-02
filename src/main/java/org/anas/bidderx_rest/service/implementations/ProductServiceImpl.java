@@ -2,26 +2,32 @@ package org.anas.bidderx_rest.service.implementations;
 
 import jakarta.transaction.Transactional;
 import org.anas.bidderx_rest.domain.*;
+import org.anas.bidderx_rest.domain.enums.AuctionType;
 import org.anas.bidderx_rest.exceptions.*;
 import org.anas.bidderx_rest.repository.*;
 import org.anas.bidderx_rest.service.FeaturedImageService;
 import org.anas.bidderx_rest.service.ProductService;
+import org.anas.bidderx_rest.service.UserService;
 import org.anas.bidderx_rest.service.dto.CollectionDTO;
 import org.anas.bidderx_rest.service.dto.ProductDTO;
 import org.anas.bidderx_rest.service.dto.mapper.AppCollectionMapper;
 import org.anas.bidderx_rest.service.dto.mapper.ProductMapper;
 import org.anas.bidderx_rest.web.vm.CreateAuctionVM;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 public class ProductServiceImpl implements ProductService {
 
-    private final AppUserRepository userRepository;
+    private final UserService userService;
     private final ProductRepository productRepository;
     private final AppCollectionRepository appCollectionRepository;
     private final ProductMapper productMapper;
@@ -30,8 +36,8 @@ public class ProductServiceImpl implements ProductService {
     private final AppCollectionMapper collectionMapper;
     private final ProductCollectionRepository productCollectionRepository;
 
-    public ProductServiceImpl(AppUserRepository userRepository, ProductRepository productRepository, ProductMapper productMapper, CategoryRepository categoryRepository, FeaturedImageService featuredImageService, AppCollectionMapper collectionMapper, ProductCollectionRepository productCollectionRepository, AppCollectionRepository appCollectionRepository) {
-        this.userRepository = userRepository;
+    public ProductServiceImpl(UserService userService, ProductRepository productRepository, ProductMapper productMapper, CategoryRepository categoryRepository, FeaturedImageService featuredImageService, AppCollectionMapper collectionMapper, ProductCollectionRepository productCollectionRepository, AppCollectionRepository appCollectionRepository) {
+        this.userService = userService;
         this.productRepository = productRepository;
         this.productCollectionRepository = productCollectionRepository;
         this.appCollectionRepository = appCollectionRepository;
@@ -44,10 +50,16 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductDTO findProductById(UUID id) {
-        Product product = productRepository.findById(id)
+        Product product = productRepository.findProductById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + id));
+
         ProductDTO productDTO = productMapper.toProductDTO(product);
 
+        productRepository.findAuctionIdByProductId(id)
+                .ifPresent(productDTO::setAuctionId);
+
+
+        // Set collections if available
         if (product.getProductCollections() != null && !product.getProductCollections().isEmpty()) {
             List<CollectionDTO> collections = product.getProductCollections().stream()
                     .map(pc -> collectionMapper.toCollectionDTO(pc.getCollection()))
@@ -55,19 +67,18 @@ public class ProductServiceImpl implements ProductService {
             productDTO.setCollections(collections);
         }
 
+        // Get featured images
         List<String> featuredImages = featuredImageService.getProductFeaturedImages(id);
         productDTO.setFeaturedImages(featuredImages);
+
         return productDTO;
     }
 
     @Override
-    public List<ProductDTO> findAvailableProductsByEmail(String email) {
-        AppUser user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User with email " + email + " not found"));
-        List<Product> products = productRepository.findByOwner(user);
-        return products.stream()
-                .map(productMapper::toProductDTO)
-                .collect(Collectors.toList());
+    public Page<ProductDTO> findAvailableProductsByEmail(String email, Pageable pageable) {
+        AppUser user = userService.findUserByEmail(email);
+        Page<Product> products = productRepository.findByOwnerEmail(email, pageable);
+        return products.map(productMapper::toProductDTO);
     }
 
 

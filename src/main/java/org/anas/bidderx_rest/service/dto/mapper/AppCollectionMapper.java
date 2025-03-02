@@ -21,5 +21,6 @@ public interface AppCollectionMapper {
     @Mapping(target = "name", source = "product.title")
     @Mapping(target = "description", source = "product.description")
     @Mapping(target = "imageUrl", source = "product.imageUrl")
+    @Mapping(target = "category", source = "product.category")
     ItemDTO toItemDTO(ProductCollection productCollection);
 }

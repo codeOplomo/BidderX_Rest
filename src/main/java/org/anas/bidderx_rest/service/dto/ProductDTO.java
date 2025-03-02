@@ -11,8 +11,10 @@ public class ProductDTO {
     private String condition;
     private String manufacturer;
     private Date productionDate;
-    private UUID categoryId;
+    private CategoryDTO category;
+    private String ownerEmail;
     private String imageUrl;
+    private UUID auctionId;
     private List<String> featuredImages;
     private List<CollectionDTO> collections;
 
@@ -85,12 +87,12 @@ public class ProductDTO {
         this.imageUrl = imageUrl;
     }
 
-    public UUID getCategoryId() {
-        return categoryId;
+    public CategoryDTO getCategory() {
+        return category;
     }
 
-    public void setCategoryId(UUID categoryId) {
-        this.categoryId = categoryId;
+    public void setCategory(CategoryDTO category) {
+        this.category = category;
     }
 
     public List<String> getFeaturedImages() { return featuredImages; }
@@ -102,5 +104,21 @@ public class ProductDTO {
 
     public void setCollections(List<CollectionDTO> collections) {
         this.collections = collections;
+    }
+
+    public String getOwnerEmail() {
+        return ownerEmail;
+    }
+
+    public void setOwnerEmail(String ownerEmail) {
+        this.ownerEmail = ownerEmail;
+    }
+
+    public UUID getAuctionId() {
+        return auctionId;
+    }
+
+    public void setAuctionId(UUID auctionId) {
+        this.auctionId = auctionId;
     }
 }

@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1740517249
+      author: QLIKY
+      changes:
+        - addColumn:
+            tableName: "auctions"
+            columns:
+              - column:
+                  name: status
+                  type: varchar(50)
+                  defaultValue: "PENDING"
+                  constraints:
+                    nullable: false
+                  remarks: "Enum type for auction status"
+              - column:
+                  name: reason
+                  type: varchar(255)
+              - column:
+                  name: auction_duration
+                  type: integer

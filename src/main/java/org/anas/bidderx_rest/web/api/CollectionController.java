@@ -6,6 +6,9 @@ import org.anas.bidderx_rest.service.CollectionService;
 import org.anas.bidderx_rest.service.dto.ApiResponse;
 import org.anas.bidderx_rest.service.dto.CollectionDTO;
 import org.anas.bidderx_rest.web.vm.CollectionVM;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,8 +28,16 @@ public class CollectionController {
     }
 
     @GetMapping("/user")
-    public ResponseEntity<ApiResponse<List<CollectionDTO>>> getCollectionsByEmail(@RequestParam String email) {
-        List<CollectionDTO> collections = collectionService.getCollectionsByEmail(email);
+    public ResponseEntity<ApiResponse<Page<CollectionDTO>>> getCollectionsByEmail(
+            @RequestParam String email,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size
+    ) {
+        PageRequest pageRequest = PageRequest.of(
+                page,
+                size
+        );
+        Page<CollectionDTO> collections = collectionService.getCollectionsByEmail(email, pageRequest);
         return ResponseEntity.ok(new ApiResponse<>("Collections retrieved successfully", collections));
     }
 

@@ -6,6 +6,7 @@ import org.anas.bidderx_rest.domain.enums.Role;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -70,13 +71,6 @@ public class AppUser implements UserDetails {
 
     private String coverImageUrl;
 
-//    @Column(name="image_name", nullable = true)
-//    private String imageName;
-//    @Column(name="image_type", nullable = true)
-//    private String imageType;
-//    @Column(name="image_data", columnDefinition = "BYTEA")
-//    @Lob
-//    private byte[] imageData;
 
     // Constructors
     public AppUser() {}

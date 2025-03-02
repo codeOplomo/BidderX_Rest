@@ -6,7 +6,10 @@ public class ItemDTO {
     private UUID id;
     private String name;
     private String description;
-    private String imageUrl; // Adjust based on your actual field names
+    private String condition;
+    private String manufacturer;
+    private String imageUrl;
+    private CategoryDTO category;
 
     // Constructors
 
@@ -44,6 +47,31 @@ public class ItemDTO {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+
+    public String getCondition() {
+        return condition;
+    }
+
+    public void setCondition(String condition) {
+        this.condition = condition;
+    }
+
+    public String getManufacturer() {
+        return manufacturer;
+    }
+
+    public void setManufacturer(String manufacturer) {
+        this.manufacturer = manufacturer;
+    }
+
+    public CategoryDTO getCategory() {
+        return category;
+    }
+
+    public void setCategory(CategoryDTO category) {
+        this.category = category;
     }
 
     public String getImageUrl() {

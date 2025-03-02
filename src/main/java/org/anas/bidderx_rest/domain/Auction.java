@@ -1,6 +1,7 @@
 package org.anas.bidderx_rest.domain;
 
 import jakarta.persistence.*;
+import org.anas.bidderx_rest.domain.enums.AuctionStatus;
 import org.anas.bidderx_rest.domain.enums.AuctionType;
 
 import java.math.BigDecimal;
@@ -16,6 +17,16 @@ public class Auction {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    @Enumerated(EnumType.STRING)
+    private AuctionStatus status = AuctionStatus.PENDING;
+
+    @Column(name = "reason")
+    private String reason;
+
+    @Column(name = "auction_duration")
+    private Integer auctionDurationInHours;
+
 
     @Enumerated(EnumType.STRING)
     @Column(name = "auction_type", nullable = false)
@@ -193,6 +204,30 @@ public class Auction {
 
     public void setOwner(AppUser owner) {
         this.owner = owner;
+    }
+
+    public AuctionStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(AuctionStatus status) {
+        this.status = status;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
+    }
+
+    public Integer getAuctionDurationInHours() {
+        return auctionDurationInHours;
+    }
+
+    public void setAuctionDurationInHours(Integer auctionDurationInHours) {
+        this.auctionDurationInHours = auctionDurationInHours;
     }
 }
 

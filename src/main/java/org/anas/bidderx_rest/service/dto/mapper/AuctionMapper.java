@@ -10,5 +10,9 @@ import org.mapstruct.Mapping;
 public interface AuctionMapper {
 
     @Mapping(target = "product", source = "product")
+    @Mapping(target = "type", source = "auctionType")
+    @Mapping(target = "reactionsCount", expression = "java(auction.getAuctionReactions() != null ? auction.getAuctionReactions().size() : 0)")
+    @Mapping(target = "likedByCurrentUser", ignore = true)
+    @Mapping(target = "duration", expression = "java(auction.getAuctionDurationInHours() != null ? auction.getAuctionDurationInHours() : 0)")
     AuctionDTO toDTO(Auction auction);
 }
