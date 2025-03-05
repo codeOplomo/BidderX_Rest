@@ -5,6 +5,7 @@ import org.anas.bidderx_rest.domain.AppUser;
 import org.anas.bidderx_rest.exceptions.*;
 import org.anas.bidderx_rest.repository.AppUserRepository;
 import org.anas.bidderx_rest.service.UserService;
+import org.anas.bidderx_rest.service.WalletService;
 import org.anas.bidderx_rest.service.dto.ProfileDTO;
 import org.anas.bidderx_rest.service.dto.mapper.AppUserMapper;
 import org.anas.bidderx_rest.web.vm.PasswordUpdateVM;
@@ -17,24 +18,38 @@ import java.io.IOException;
 
 @Service
 public class UserServiceImpl implements UserService {
+
     private final AppUserRepository userRepository;
     private final AppUserMapper appUserMapper;
     private final PasswordEncoder passwordEncoder;
+    private final WalletService walletService;
 
-    public UserServiceImpl(AppUserRepository userRepository, AppUserMapper appUserMapper, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(AppUserRepository userRepository, AppUserMapper appUserMapper, PasswordEncoder passwordEncoder, WalletService walletService) {
         this.userRepository = userRepository;
+        this.walletService = walletService;
         this.appUserMapper = appUserMapper;
         this.passwordEncoder = passwordEncoder;
     }
 
 
+    @Override
+    public AppUser save(AppUser user) {
+        return userRepository.save(user);
+    }
+
     public AppUser findUserByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
     }
+
     @Override
     public ProfileDTO getUserProfile(String email) {
-        return appUserMapper.toProfileDTO(findUserByEmail(email));
+        AppUser user = findUserByEmail(email);
+        ProfileDTO profileDTO = appUserMapper.toProfileDTO(user);
+        if (profileDTO.isHasWallet()) {
+            profileDTO.setWallet(walletService.findByUser(user));
+        }
+        return profileDTO;
     }
 
     @Override

@@ -4,13 +4,12 @@ import org.anas.bidderx_rest.domain.AppUser;
 import org.anas.bidderx_rest.domain.Wallet;
 import org.anas.bidderx_rest.service.WalletService;
 import org.anas.bidderx_rest.service.dto.ApiResponse;
+import org.anas.bidderx_rest.service.dto.WalletDTO;
 import org.anas.bidderx_rest.web.vm.DepositVM;
+import org.anas.bidderx_rest.web.vm.WalletVM;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 
 @RestController
@@ -22,11 +21,25 @@ public class WalletController {
         this.walletService = walletService;
     }
 
+    @PostMapping("/connect")
+    public ResponseEntity<ApiResponse<WalletDTO>> connectWallet(@AuthenticationPrincipal AppUser currentUser, @RequestBody WalletVM request) {
+        WalletDTO newWallet = walletService.connectWallet(currentUser, request);
+        return ResponseEntity.ok(new ApiResponse<>("Wallet connected", newWallet));
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<WalletDTO>> getWallet(@AuthenticationPrincipal AppUser currentUser) {
+        WalletDTO wallet = walletService.findByUser(currentUser);
+        return ResponseEntity.ok(new ApiResponse<>("Wallet retrieved", wallet));
+    }
+
+
     @PostMapping("/deposit")
-    public ResponseEntity<ApiResponse<Wallet>> depositFunds(
-            @RequestBody DepositVM request,
-            @AuthenticationPrincipal AppUser currentUser) {
-        Wallet updatedWallet = walletService.depositFunds(currentUser, request.getAmount());
-        return ResponseEntity.ok(new ApiResponse<>("Deposit successful", updatedWallet));
+    public ResponseEntity<ApiResponse<WalletDTO>> userDeposit(
+            @AuthenticationPrincipal AppUser currentUser,
+            @RequestBody DepositVM request
+    ) {
+        WalletDTO walletDto = walletService.depositFundsForUser(currentUser, request.getAmount());
+        return ResponseEntity.ok(new ApiResponse<>("Checkout session created", walletDto));
     }
 }

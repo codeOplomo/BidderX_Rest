@@ -1,6 +1,7 @@
 package org.anas.bidderx_rest.domain;
 
 import jakarta.persistence.*;
+import org.anas.bidderx_rest.domain.enums.WalletType;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -15,12 +16,19 @@ public class Wallet {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false)
+    private WalletType type;
+
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private AppUser user;
 
     @Column(name = "balance", nullable = false)
     private BigDecimal balance = BigDecimal.ZERO;
+
+    @Column(name = "currency", nullable = false)
+    private String currency;
 
     @OneToMany(mappedBy = "wallet", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Transaction> transactions = new ArrayList<>();
@@ -53,11 +61,27 @@ public class Wallet {
         this.balance = balance;
     }
 
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
     public List<Transaction> getTransactions() {
         return transactions;
     }
 
     public void setTransactions(List<Transaction> transactions) {
         this.transactions = transactions;
+    }
+
+    public WalletType getType() {
+        return type;
+    }
+
+    public void setType(WalletType type) {
+        this.type = type;
     }
 }

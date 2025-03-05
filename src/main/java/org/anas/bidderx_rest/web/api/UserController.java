@@ -21,9 +21,9 @@ public class UserController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<ProfileDTO> getProfile(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<ApiResponse<ProfileDTO>> getProfile(@AuthenticationPrincipal UserDetails userDetails) {
         ProfileDTO profile = userService.getUserProfile(userDetails.getUsername());
-        return ResponseEntity.ok(profile);
+        return ResponseEntity.ok(new ApiResponse<>("Profile retreived", profile));
     }
 
     @PutMapping("/change-password")

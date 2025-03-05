@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1740919699
+      author: QLIKY
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: has_wallet
+                  type: boolean
+                  defaultValue: false
+                  constraints:
+                    nullable: false

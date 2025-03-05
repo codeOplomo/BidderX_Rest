@@ -1,11 +1,4 @@
 spring:
-  # Data source configuration
-  # datasource:
-  #   url: jdbc:postgresql://localhost:5432/hunters_league_db
-  #   username: admin
-  #   password: admin
-  #   driver-class-name: org.postgresql.Driver
-
   # Docker compose configuration
   docker:
     compose:
@@ -50,3 +43,19 @@ security:
     refresh-secret-key: ${JWT_REFRESH_SECRET_KEY}
     access-expiration-time: 120000
     refresh-expiration-time: 604800000
+
+
+stripe:
+  success-url: http://localhost:4200/payment-confirmation
+  cancel-url: http://localhost:4200/payment-cancel
+  secret-key: ${STRIPE_SECRET_KEY}
+  webhook:
+    secret: whsec_81ee06c33ce07dd7a88755de5a89e497db90dbd1644d99ca77480923998bb986
+
+
+  # Data source configuration
+  # datasource:
+  #   url: jdbc:postgresql://localhost:5432/hunters_league_db
+  #   username: admin
+  #   password: admin
+  #   driver-class-name: org.postgresql.Driver

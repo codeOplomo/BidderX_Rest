@@ -82,4 +82,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ResponseMessageDTO> handleInvalidAuctionException(InvalidAuctionException exception) {
         return new ResponseEntity<>(new ResponseMessageDTO(exception.getMessage(), null), HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(WalletAlreadyExistsException.class)
+    public ResponseEntity<ResponseMessageDTO> handleWalletAlreadyExistsException(WalletAlreadyExistsException exception) {
+        return new ResponseEntity<>(new ResponseMessageDTO(exception.getMessage(), null), HttpStatus.BAD_REQUEST);
+    }
 }

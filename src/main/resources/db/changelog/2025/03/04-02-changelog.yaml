@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1740919690
+      author: QLIKY
+      changes:
+        - addColumn:
+            tableName: wallets
+            columns:
+              - column:
+                  name: currency
+                  type: VARCHAR(3)
+                  constraints:
+                    nullable: false
+                  defaultValue: 'USD'
+
+  - changeSet:
+      id: 1740919691
+      author: QLIKY
+      changes:
+        - dropColumn:
+            tableName: transactions
+            columnName: currency

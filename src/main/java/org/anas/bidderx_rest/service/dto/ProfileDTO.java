@@ -1,5 +1,7 @@
 package org.anas.bidderx_rest.service.dto;
 
+import java.util.List;
+
 public class ProfileDTO {
     private String email;
     private String profileIdentifier;
@@ -8,6 +10,9 @@ public class ProfileDTO {
     private String lastName;
     private String imageUrl;
     private String coverImageUrl;
+    private WalletDTO wallet;
+    private List<CollectionDTO> collections;
+    private boolean hasWallet;
 
 
     public ProfileDTO() {
@@ -67,5 +72,29 @@ public class ProfileDTO {
 
     public void setCoverImageUrl(String coverImageUrl) {
         this.coverImageUrl = coverImageUrl;
+    }
+
+    public WalletDTO getWallet() {
+        return wallet;
+    }
+
+    public void setWallet(WalletDTO wallet) {
+        this.wallet = wallet;
+    }
+
+    public List<CollectionDTO> getCollections() {
+        return collections;
+    }
+
+    public void setCollections(List<CollectionDTO> collections) {
+        this.collections = collections;
+    }
+
+    public boolean isHasWallet() {
+        return hasWallet;
+    }
+
+    public void setHasWallet(boolean hasWallet) {
+        this.hasWallet = hasWallet;
     }
 }

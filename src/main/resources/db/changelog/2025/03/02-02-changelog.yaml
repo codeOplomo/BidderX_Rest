@@ -3,36 +3,18 @@ databaseChangeLog:
       id: 1740917682
       author: QLIKY
       changes:
-        - createTable:
+        - addColumn:
             tableName: wallets
             columns:
               - column:
-                  name: id
-                  type: UUID
-                  constraints:
-                    primaryKey: true
-                    nullable: false
-              - column:
-                  name: user_id
-                  type: UUID
+                  name: type
+                  type: VARCHAR(50)
                   constraints:
                     nullable: false
-                    unique: true
-              - column:
-                  name: balance
-                  type: NUMERIC(19,2)
-                  defaultValueNumeric: 0
-                  constraints:
-                    nullable: false
-        - addForeignKeyConstraint:
-            baseTableName: wallets
-            baseColumnNames: user_id
-            constraintName: fk_wallets_users
-            referencedTableName: users
-            referencedColumnNames: id
+
 
   - changeSet:
-      id: 1740917684
+      id: 1740917687
       author: QLIKY
       changes:
         - createTable:
@@ -45,6 +27,11 @@ databaseChangeLog:
                     primaryKey: true
                     nullable: false
               - column:
+                  name: type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
                   name: wallet_id
                   type: UUID
                   constraints:
@@ -52,6 +39,11 @@ databaseChangeLog:
               - column:
                   name: amount
                   type: NUMERIC(19,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: currency
+                  type: VARCHAR(3)
                   constraints:
                     nullable: false
               - column:

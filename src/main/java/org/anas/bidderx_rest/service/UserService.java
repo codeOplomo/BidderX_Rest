@@ -9,6 +9,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface UserService {
+    AppUser save(AppUser user);
+
     AppUser findUserByEmail(String email);
 
     void uploadProfileImage(AppUser user, String imageUrl);

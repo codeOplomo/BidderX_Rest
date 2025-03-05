@@ -48,6 +48,9 @@ public class AppUser implements UserDetails {
     @Column(name = "is_active", nullable = false)
     private boolean isActive;
 
+    @Column(name = "has_wallet", nullable = false)
+    private boolean hasWallet = false;
+
     @Column(name = "is_banned", nullable = false)
     private boolean isBanned;
 
@@ -329,6 +332,14 @@ public class AppUser implements UserDetails {
 
     public void setAuctionReactions(List<AuctionReaction> auctionReactions) {
         this.auctionReactions = auctionReactions;
+    }
+
+    public boolean isHasWallet() {
+        return hasWallet;
+    }
+
+    public void setHasWallet(boolean hasWallet) {
+        this.hasWallet = hasWallet;
     }
 
 //    public String getImageName() {

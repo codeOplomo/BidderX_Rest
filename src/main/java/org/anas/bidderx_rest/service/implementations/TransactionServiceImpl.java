@@ -14,6 +14,11 @@ public class TransactionServiceImpl implements TransactionService {
         this.transactionRepository = transactionRepository;
     }
 
+
+    public boolean existsBySessionId(String sessionId) {
+        return transactionRepository.existsBySessionId(sessionId);
+    }
+
     @Override
     public Transaction save(Transaction transaction) {
         return transactionRepository.save(transaction);

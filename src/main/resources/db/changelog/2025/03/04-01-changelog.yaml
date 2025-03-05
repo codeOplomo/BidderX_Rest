@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1740917699
+      author: QLIKY
+      changes:
+        - addColumn:
+            tableName: transactions
+            columns:
+              - column:
+                  name: session_id
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: true

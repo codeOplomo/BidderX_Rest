@@ -1,6 +1,7 @@
 package org.anas.bidderx_rest.domain;
 
 import jakarta.persistence.*;
+import org.anas.bidderx_rest.domain.enums.TransactionType;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,6 +15,10 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false)
+    private TransactionType type;
+
     @ManyToOne
     @JoinColumn(name = "wallet_id", nullable = false)
     private Wallet wallet;
@@ -21,8 +26,12 @@ public class Transaction {
     @Column(name = "amount", nullable = false)
     private BigDecimal amount;
 
+
     @Column(name = "transaction_date", nullable = false)
     private LocalDateTime transactionDate;
+
+    @Column(name = "session_id")
+    private String sessionId;
 
     @Column(name = "description")
     private String description;
@@ -69,5 +78,22 @@ public class Transaction {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public TransactionType getType() {
+        return type;
+    }
+
+    public void setType(TransactionType type) {
+        this.type = type;
+    }
+
+
+    public String getSessionId() {
+        return sessionId;
+    }
+
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
     }
 }
