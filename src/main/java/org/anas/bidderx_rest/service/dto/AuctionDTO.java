@@ -19,6 +19,7 @@ public class AuctionDTO {
     private String startingPrice;
     private String currentBid;
     private ProductDTO product;
+    private CategoryDTO category;
     private int reactionsCount;
     private boolean likedByCurrentUser;
     private List<ProfileDTO> bidders;
@@ -137,5 +138,13 @@ public class AuctionDTO {
 
     public void setStatus(AuctionStatus status) {
         this.status = status;
+    }
+
+    public CategoryDTO getCategory() {
+        return category;
+    }
+
+    public void setCategory(CategoryDTO category) {
+        this.category = category;
     }
 }

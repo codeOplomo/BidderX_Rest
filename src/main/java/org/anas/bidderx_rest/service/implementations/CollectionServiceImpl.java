@@ -9,7 +9,9 @@ import org.anas.bidderx_rest.repository.AppCollectionRepository;
 import org.anas.bidderx_rest.repository.AppUserRepository;
 import org.anas.bidderx_rest.service.CollectionService;
 import org.anas.bidderx_rest.service.dto.CollectionDTO;
+import org.anas.bidderx_rest.service.dto.ProfileDTO;
 import org.anas.bidderx_rest.service.dto.mapper.AppCollectionMapper;
+import org.anas.bidderx_rest.service.dto.mapper.AppUserMapper;
 import org.anas.bidderx_rest.web.vm.CollectionVM;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,21 +26,36 @@ public class CollectionServiceImpl implements CollectionService {
     private final AppCollectionRepository collectionRepository;
     private final AppUserRepository userRepository;
     private final AppCollectionMapper collectionMapper;
+    private final AppUserMapper userMapper;
 
 
-    public CollectionServiceImpl(AppCollectionRepository collectionRepository, AppUserRepository userRepository, AppCollectionMapper collectionMapper) {
+    public CollectionServiceImpl(AppCollectionRepository collectionRepository, AppUserRepository userRepository, AppCollectionMapper collectionMapper, AppUserMapper userMapper) {
         this.collectionRepository = collectionRepository;
         this.userRepository = userRepository;
         this.collectionMapper = collectionMapper;
+        this.userMapper = userMapper;
     }
 
+    @Override
+    public Page<CollectionDTO> getAllCollections(PageRequest pageRequest) {
+        Page<AppCollection> collections = collectionRepository.findAll(pageRequest);
+        return collections.map(collection -> {
+            CollectionDTO collectionDTO = collectionMapper.toCollectionDTO(collection);
+            ProfileDTO owner = userMapper.toProfileDTO(collection.getAppUser());
+            collectionDTO.setOwner(owner);
+            return collectionDTO;
+        });
+    }
 
 
     public CollectionDTO getCollectionById(UUID id) {
         AppCollection collection = collectionRepository.findByIdWithProducts(id)
                 .orElseThrow(() -> new AppCollectionNotFound("Collection not found"));
+        CollectionDTO collectionDTO = collectionMapper.toCollectionDTO(collection);
+        ProfileDTO owner = userMapper.toProfileDTO(collection.getAppUser());
+        collectionDTO.setOwner(owner);
 
-        return collectionMapper.toCollectionDTO(collection);
+        return collectionDTO;
     }
 
     public Page<CollectionDTO> getCollectionsByEmail(String email, PageRequest pageRequest) {

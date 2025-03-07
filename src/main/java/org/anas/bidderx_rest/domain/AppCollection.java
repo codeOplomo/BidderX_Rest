@@ -36,6 +36,15 @@ public class AppCollection {
     public AppCollection() {
     }
 
+    @Override
+    public String toString() {
+        return "AppCollection{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", imageUrl='" + imageUrl + '\'' +
+                '}';
+    }
     // Method to add a product to the collection
     public void addProductCollection(ProductCollection productCollection) {
         if (productCollection != null) {

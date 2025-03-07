@@ -27,6 +27,22 @@ public class CollectionController {
         this.collectionService = collectionService;
     }
 
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<CollectionDTO>> getCollectionById(@PathVariable UUID id) {
+        CollectionDTO collectionDTO = collectionService.getCollectionById(id);
+        return ResponseEntity.ok(new ApiResponse<>("Collection retrieved successfully", collectionDTO));
+    }
+    @GetMapping("")
+    public ResponseEntity<ApiResponse<Page<CollectionDTO>>> getAllCollections(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size) {
+
+        PageRequest pageRequest = PageRequest.of(page, size);
+        Page<CollectionDTO> collections = collectionService.getAllCollections(pageRequest);
+        return ResponseEntity.ok(new ApiResponse<>("Collections retrieved successfully", collections));
+    }
+
     @GetMapping("/user")
     public ResponseEntity<ApiResponse<Page<CollectionDTO>>> getCollectionsByEmail(
             @RequestParam String email,
@@ -51,10 +67,5 @@ public class CollectionController {
         return ResponseEntity.ok(new ApiResponse<>("Collection created successfully", collectionDTO));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<CollectionDTO>> getCollectionById(@PathVariable UUID id) {
-        CollectionDTO collectionDTO = collectionService.getCollectionById(id);
-        return ResponseEntity.ok(new ApiResponse<>("Collection retrieved successfully", collectionDTO));
-    }
 
 }

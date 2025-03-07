@@ -28,14 +28,14 @@ public class CategoryServiceImpl implements CategoryService {
     public List<CategoryDTO> listCategories() {
         List<Category> categories = categoryRepository.findAll();
         return categories.stream()
-                .map(categoryMapper::toCategoryDTO)
+                .map(category -> categoryMapper.toCategoryDTO(category, categoryRepository))
                 .collect(Collectors.toList());
     }
 
     @Override
     public CategoryDTO getCategoryById(UUID id) {
         return categoryRepository.findById(id)
-                .map(categoryMapper::toCategoryDTO)
+                .map(category -> categoryMapper.toCategoryDTO(category, categoryRepository))
                 .orElseThrow(() -> new CategoryNotFoundException("Category not found"));
     }
 

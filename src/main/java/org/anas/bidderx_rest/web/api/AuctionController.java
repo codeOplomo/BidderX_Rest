@@ -33,6 +33,30 @@ public class AuctionController {
         this.auctionService = auctionService;
     }
 
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<Page<AuctionDTO>>> getAuctionsByFilter(
+            @RequestParam(required = false) UUID categoryId,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "8") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<AuctionDTO> auctions = auctionService.getAuctionsByFilter(categoryId, minPrice, maxPrice, pageable);
+        return ResponseEntity.ok(new ApiResponse<>("Auctions retrieved successfully", auctions));
+    }
+
+    @GetMapping("/live")
+    public ResponseEntity<ApiResponse<Page<AuctionDTO>>> getLiveAuctions(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "8") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<AuctionDTO> auctions = auctionService.getLiveAuctions(pageable);
+        return ResponseEntity.ok(new ApiResponse<>("Live auctions retrieved successfully", auctions));
+    }
+
     @GetMapping("/{auctionId}")
     public ResponseEntity<ApiResponse<AuctionDTO>> getAuctionById(@PathVariable UUID auctionId, @AuthenticationPrincipal AppUser user) {
         AuctionDTO auctionDTO = auctionService.getAuctionById(auctionId, user);

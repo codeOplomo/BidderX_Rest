@@ -29,6 +29,14 @@ public class ProductCollection
     // Constructors
     public ProductCollection() {}
 
+    @Override
+    public String toString() {
+        return "ProductCollection{" +
+                "id=" + id +
+                ", addedAt=" + addedAt +
+                // DO NOT include product or appCollection here!
+                '}';
+    }
     public boolean isValid() {
         return this.product != null
                 && this.appCollection != null

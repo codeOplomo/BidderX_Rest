@@ -16,6 +16,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface AuctionService {
+
+    Page<AuctionDTO> getAuctionsByFilter(UUID categoryId, Double minPrice, Double maxPrice, Pageable pageable);
+
+    Page<AuctionDTO> getLiveAuctions(Pageable pageable);
+
     AuctionDTO getAuctionById(UUID auctionId, AppUser user);
 
     AuctionsStateDTO getAuctionsStats();
@@ -31,11 +36,8 @@ public interface AuctionService {
     Page<AuctionDTO> findAuctionsByEmail(String email, Pageable pageable);
 
     Page<AuctionDTO> findLikedAuctionsByEmail(String email, Pageable pageable);
-    void handleProductImages(
-            CreateAuctionVM request,
-            MultipartFile mainImage,
-            List<MultipartFile> additionalImages
-    );
+
+
     AuctionDTO createAuction(CreateAuctionVM request, MultipartFile mainImage, List<MultipartFile> additionalImages, @AuthenticationPrincipal AppUser authenticatedUser) ;
 
 }

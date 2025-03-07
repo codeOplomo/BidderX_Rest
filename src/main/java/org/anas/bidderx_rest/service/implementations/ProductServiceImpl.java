@@ -6,6 +6,7 @@ import org.anas.bidderx_rest.domain.enums.AuctionType;
 import org.anas.bidderx_rest.exceptions.*;
 import org.anas.bidderx_rest.repository.*;
 import org.anas.bidderx_rest.service.FeaturedImageService;
+import org.anas.bidderx_rest.service.FileStorageService;
 import org.anas.bidderx_rest.service.ProductService;
 import org.anas.bidderx_rest.service.UserService;
 import org.anas.bidderx_rest.service.dto.CollectionDTO;
@@ -13,12 +14,15 @@ import org.anas.bidderx_rest.service.dto.ProductDTO;
 import org.anas.bidderx_rest.service.dto.mapper.AppCollectionMapper;
 import org.anas.bidderx_rest.service.dto.mapper.ProductMapper;
 import org.anas.bidderx_rest.web.vm.CreateAuctionVM;
+import org.anas.bidderx_rest.web.vm.ProductVM;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,8 +39,9 @@ public class ProductServiceImpl implements ProductService {
     private final FeaturedImageService featuredImageService;
     private final AppCollectionMapper collectionMapper;
     private final ProductCollectionRepository productCollectionRepository;
+    private final FileStorageService fileStorageService;
 
-    public ProductServiceImpl(UserService userService, ProductRepository productRepository, ProductMapper productMapper, CategoryRepository categoryRepository, FeaturedImageService featuredImageService, AppCollectionMapper collectionMapper, ProductCollectionRepository productCollectionRepository, AppCollectionRepository appCollectionRepository) {
+    public ProductServiceImpl(UserService userService, ProductRepository productRepository, ProductMapper productMapper, CategoryRepository categoryRepository, FeaturedImageService featuredImageService, AppCollectionMapper collectionMapper, ProductCollectionRepository productCollectionRepository, AppCollectionRepository appCollectionRepository, FileStorageService fileStorageService) {
         this.userService = userService;
         this.productRepository = productRepository;
         this.productCollectionRepository = productCollectionRepository;
@@ -44,9 +49,110 @@ public class ProductServiceImpl implements ProductService {
         this.productMapper = productMapper;
         this.categoryRepository = categoryRepository;
         this.featuredImageService = featuredImageService;
+        this.fileStorageService = fileStorageService;
         this.collectionMapper = collectionMapper;
     }
 
+
+    public void handleProductImages(
+            CreateAuctionVM request,
+            MultipartFile mainImage,
+            List<MultipartFile> additionalImages
+    ) {
+        // Validate main image for new products
+        if (request.getExistingProductId() == null) {
+            if (mainImage == null || mainImage.isEmpty()) {
+                throw new InvalidProductRequestException("Main image is required for new products");
+            }
+
+            // Store main image
+            String mainImageUrl = fileStorageService.storeFile(mainImage, "products/main");
+            request.setProductImageUrl(mainImageUrl);
+
+            // Store additional featured images
+            List<String> featuredImageUrls = new ArrayList<>();
+            if (additionalImages != null) {
+                additionalImages.stream()
+                        .filter(img -> !img.isEmpty())
+                        .forEach(img -> {
+                            String url = fileStorageService.storeFile(img, "products/featured");
+                            featuredImageUrls.add(url);
+                        });
+            }
+            request.setFeaturedImageUrls(featuredImageUrls);
+        }
+    }
+
+    public void handleProductImages(
+            ProductVM request,
+            MultipartFile mainImage,
+            List<MultipartFile> additionalImages
+    ) {
+            if (mainImage == null || mainImage.isEmpty()) {
+                throw new InvalidProductRequestException("Main image is required for new products");
+            }
+
+            // Store main image
+            String mainImageUrl = fileStorageService.storeFile(mainImage, "products/main");
+            request.setImageUrl(mainImageUrl);
+
+            // Store additional featured images
+            List<String> featuredImageUrls = new ArrayList<>();
+            if (additionalImages != null) {
+                additionalImages.stream()
+                        .filter(img -> !img.isEmpty())
+                        .forEach(img -> {
+                            String url = fileStorageService.storeFile(img, "products/featured");
+                            featuredImageUrls.add(url);
+                        });
+            }
+            request.setFeaturedImageUrls(featuredImageUrls);
+    }
+
+    @Override
+    @Transactional
+    public ProductDTO createProduct(ProductVM request, MultipartFile mainImage, List<MultipartFile> additionalImages, String username) {
+        AppUser owner = userService.findUserByEmail(username);
+        Product product = new Product();
+
+        product.setTitle(request.getTitle());
+        product.setDescription(request.getDescription());
+        product.setCondition(request.getCondition());
+        product.setManufacturer(request.getManufacturer());
+        product.setProductionDate(request.getProductionDate());
+        System.out.println("image url: " + request.getImageUrl());
+        product.setOwner(owner);
+
+        System.out.println("Category ID: " + request.getCategoryId());
+        if (request.getCategoryId() != null) {
+            Category category = categoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new CategoryNotFoundException("Category not found"));
+            product.setCategory(category);
+        }
+
+        handleProductImages(request, mainImage, additionalImages);
+        product.setImageUrl(request.getImageUrl());
+
+        product = productRepository.save(product);
+
+        if (request.getCollectionId() != null) {
+            AppCollection collection = appCollectionRepository.findById(request.getCollectionId())
+                    .orElseThrow(() -> new CollectionNotFoundException("Collection not found"));
+
+            ProductCollection productCollection = new ProductCollection();
+            productCollection.setProduct(product);
+            productCollection.setCollection(collection);
+            productCollection.setAddedAt(LocalDateTime.now());
+
+            productCollectionRepository.save(productCollection);
+        }
+        if (request.getFeaturedImageUrls() != null && !request.getFeaturedImageUrls().isEmpty()) {
+            featuredImageService.saveBatchFeaturedImages(product.getId(), "product", request.getFeaturedImageUrls());
+        }
+
+
+        return productMapper.toProductDTO(product);
+    }
 
     @Override
     public ProductDTO findProductById(UUID id) {

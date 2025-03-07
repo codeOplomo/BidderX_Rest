@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.UUID;
 
 public interface CollectionService {
+    Page<CollectionDTO> getAllCollections(PageRequest pageRequest);
+
     CollectionDTO createCollection(String username, CollectionVM createVM);
 
     CollectionDTO getCollectionById(UUID id);

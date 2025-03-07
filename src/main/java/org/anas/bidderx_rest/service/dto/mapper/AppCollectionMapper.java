@@ -12,7 +12,7 @@ public interface AppCollectionMapper {
 
 
     @Mapping(target = "items", source = "productCollections")
-    @Mapping(target = "owner", source = "appUser")
+    @Mapping(target = "owner", ignore = true)
     @Mapping(target = "imageUrl", source = "imageUrl")
     CollectionDTO toCollectionDTO(AppCollection collection);
 
@@ -22,5 +22,7 @@ public interface AppCollectionMapper {
     @Mapping(target = "description", source = "product.description")
     @Mapping(target = "imageUrl", source = "product.imageUrl")
     @Mapping(target = "category", source = "product.category")
+    @Mapping(target = "condition", source = "product.condition")
+    @Mapping(target = "manufacturer", source = "product.manufacturer")
     ItemDTO toItemDTO(ProductCollection productCollection);
 }

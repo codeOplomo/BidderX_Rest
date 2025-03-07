@@ -5,6 +5,7 @@ import java.util.UUID;
 public class CategoryDTO {
     private UUID id;
     private String name;
+    private Long productsCount;
 
     // getters and setters
     public CategoryDTO() {}
@@ -23,5 +24,13 @@ public class CategoryDTO {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Long getProductsCount() {
+        return productsCount;
+    }
+
+    public void setProductsCount(Long productsCount) {
+        this.productsCount = productsCount;
     }
 }

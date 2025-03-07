@@ -19,6 +19,7 @@ import org.anas.bidderx_rest.service.dto.mapper.AuctionMapper;
 import org.anas.bidderx_rest.web.vm.CreateAuctionVM;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,22 +35,52 @@ public class AuctionServiceImpl implements AuctionService {
     private final AuctionRepository auctionRepository;
     private final AuctionMapper auctionMapper;
     private final ProductService productService;
-    private final FileStorageService fileStorageService;
 
     public AuctionServiceImpl(
             UserService userService,
             AuctionRepository auctionRepository,
             AuctionMapper auctionMapper,
-            ProductService productService,
-            FileStorageService fileStorageService
+            ProductService productService
     ) {
         this.userService = userService;
         this.auctionRepository = auctionRepository;
         this.auctionMapper = auctionMapper;
         this.productService = productService;
-        this.fileStorageService = fileStorageService;
     }
 
+    public Page<AuctionDTO> getAuctionsByFilter(UUID categoryId, Double minPrice, Double maxPrice, Pageable pageable) {
+        Specification<Auction> spec = Specification.where(null);
+
+        if (categoryId != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("product").get("category").get("id"), categoryId) // Path: Auction → Product → Category
+            );
+        }
+
+        if (minPrice != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.greaterThanOrEqualTo(root.get("currentPrice"), minPrice));
+        }
+
+        if (maxPrice != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.lessThanOrEqualTo(root.get("currentPrice"), maxPrice));
+        }
+
+        return auctionRepository.findAll(spec, pageable)
+                .map(auctionMapper::toDTO);
+    }
+
+    @Override
+    public Page<AuctionDTO> getLiveAuctions(Pageable pageable) {
+        Page<Auction> auctions = auctionRepository.findByStatus(AuctionStatus.APPROVED, pageable);
+        return auctions.map(auction -> {
+            AuctionDTO dto = auctionMapper.toDTO(auction);
+            // Set duration with a default value of 0 if null
+            dto.setDuration(auction.getAuctionDurationInHours() != null ? auction.getAuctionDurationInHours() : 0);
+            return dto;
+        });
+    }
 
     @Override
     public AuctionDTO getAuctionById(UUID auctionId, AppUser user) {
@@ -212,39 +243,12 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
 
-    public void handleProductImages(
-            CreateAuctionVM request,
-            MultipartFile mainImage,
-            List<MultipartFile> additionalImages
-    ) {
-        // Validate main image for new products
-        if (request.getExistingProductId() == null) {
-            if (mainImage == null || mainImage.isEmpty()) {
-                throw new InvalidProductRequestException("Main image is required for new products");
-            }
 
-            // Store main image
-            String mainImageUrl = fileStorageService.storeFile(mainImage, "products/main");
-            request.setProductImageUrl(mainImageUrl);
-
-            // Store additional featured images
-            List<String> featuredImageUrls = new ArrayList<>();
-            if (additionalImages != null) {
-                additionalImages.stream()
-                        .filter(img -> !img.isEmpty())
-                        .forEach(img -> {
-                            String url = fileStorageService.storeFile(img, "products/featured");
-                            featuredImageUrls.add(url);
-                        });
-            }
-            request.setFeaturedImageUrls(featuredImageUrls);
-        }
-    }
 
     @Transactional
     public AuctionDTO createAuction(CreateAuctionVM request, MultipartFile mainImage, List<MultipartFile> additionalImages, @AuthenticationPrincipal AppUser authenticatedUser) {
         if (request.getExistingProductId() == null) {
-            handleProductImages(request, mainImage, additionalImages);
+            productService.handleProductImages(request, mainImage, additionalImages);
         }
 
         validateAuctionRules(request);

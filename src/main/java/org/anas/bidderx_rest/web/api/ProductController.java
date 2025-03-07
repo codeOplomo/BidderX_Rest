@@ -1,14 +1,19 @@
 package org.anas.bidderx_rest.web.api;
 
 
+import jakarta.validation.Valid;
 import org.anas.bidderx_rest.service.ProductService;
 import org.anas.bidderx_rest.service.dto.ApiResponse;
 import org.anas.bidderx_rest.service.dto.ProductDTO;
+import org.anas.bidderx_rest.web.vm.ProductVM;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -21,6 +26,17 @@ public class ProductController {
 
     public ProductController(ProductService productService) {
         this.productService = productService;
+    }
+
+    @PostMapping
+    public ResponseEntity<ApiResponse<ProductDTO>> createProduct(
+            @Valid @RequestPart("product") ProductVM request,
+            @RequestPart(value = "mainImage", required = false) MultipartFile mainImage,
+            @RequestPart(value = "additionalImages", required = false) List<MultipartFile> additionalImages,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        ProductDTO createdProduct = productService.createProduct(request, mainImage, additionalImages, userDetails.getUsername());
+        return ResponseEntity.ok(new ApiResponse<>("Product created successfully", createdProduct));
     }
 
     @GetMapping("/{id}")
