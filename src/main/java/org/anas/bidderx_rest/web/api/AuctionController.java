@@ -2,8 +2,10 @@ package org.anas.bidderx_rest.web.api;
 
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import org.anas.bidderx_rest.domain.AppUser;
 import org.anas.bidderx_rest.domain.Auction;
+import org.anas.bidderx_rest.domain.enums.AuctionStatus;
 import org.anas.bidderx_rest.exceptions.InvalidProductRequestException;
 import org.anas.bidderx_rest.service.AuctionService;
 import org.anas.bidderx_rest.service.dto.ApiResponse;
@@ -14,6 +16,7 @@ import org.anas.bidderx_rest.web.vm.RejectAuctionVM;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -34,18 +37,32 @@ public class AuctionController {
     }
 
 
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<List<AuctionDTO>>> searchAuctions(
+            @RequestParam String q,
+            @RequestParam(defaultValue = "5") int limit) {
+
+        List<AuctionDTO> results = auctionService.searchAuctions(q, limit);
+        return ResponseEntity.ok(new ApiResponse<>("Search results", results));
+    }
+    
     @GetMapping
     public ResponseEntity<ApiResponse<Page<AuctionDTO>>> getAuctionsByFilter(
             @RequestParam(required = false) UUID categoryId,
-            @RequestParam(required = false) Double minPrice,
-            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) @Min(0) Double minPrice,
+            @RequestParam(required = false) @Min(0) Double maxPrice,
+            @RequestParam(required = false) AuctionStatus status,
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "DESC") String sortOrder,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "8") int size) {
 
-        Pageable pageable = PageRequest.of(page, size);
-        Page<AuctionDTO> auctions = auctionService.getAuctionsByFilter(categoryId, minPrice, maxPrice, pageable);
+        Sort sort = Sort.by(Sort.Direction.fromString(sortOrder), "startTime");
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<AuctionDTO> auctions = auctionService.getAuctionsByFilter(categoryId, minPrice, maxPrice, status, q, pageable);
         return ResponseEntity.ok(new ApiResponse<>("Auctions retrieved successfully", auctions));
     }
+
 
     @GetMapping("/live")
     public ResponseEntity<ApiResponse<Page<AuctionDTO>>> getLiveAuctions(

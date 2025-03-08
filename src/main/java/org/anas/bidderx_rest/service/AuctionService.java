@@ -2,6 +2,7 @@ package org.anas.bidderx_rest.service;
 
 import org.anas.bidderx_rest.domain.AppUser;
 import org.anas.bidderx_rest.domain.Auction;
+import org.anas.bidderx_rest.domain.enums.AuctionStatus;
 import org.anas.bidderx_rest.service.dto.AuctionDTO;
 import org.anas.bidderx_rest.service.dto.AuctionsStateDTO;
 import org.anas.bidderx_rest.web.vm.CreateAuctionVM;
@@ -16,8 +17,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface AuctionService {
+    List<AuctionDTO> searchAuctions(String query, int limit);
 
-    Page<AuctionDTO> getAuctionsByFilter(UUID categoryId, Double minPrice, Double maxPrice, Pageable pageable);
+    Page<AuctionDTO> getAuctionsByFilter(UUID categoryId, Double minPrice, Double maxPrice, AuctionStatus status, String query, Pageable pageable);
 
     Page<AuctionDTO> getLiveAuctions(Pageable pageable);
 

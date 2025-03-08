@@ -6,6 +6,7 @@ public class CategoryDTO {
     private UUID id;
     private String name;
     private Long productsCount;
+    private Long auctionsCount;
 
     // getters and setters
     public CategoryDTO() {}
@@ -32,5 +33,13 @@ public class CategoryDTO {
 
     public void setProductsCount(Long productsCount) {
         this.productsCount = productsCount;
+    }
+
+    public Long getAuctionsCount() {
+        return auctionsCount;
+    }
+
+    public void setAuctionsCount(Long auctionsCount) {
+        this.auctionsCount = auctionsCount;
     }
 }

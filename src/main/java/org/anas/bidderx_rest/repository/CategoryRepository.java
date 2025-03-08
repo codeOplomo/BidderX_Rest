@@ -12,4 +12,8 @@ import java.util.UUID;
 public interface CategoryRepository extends JpaRepository<Category, UUID> {
     @Query("SELECT COUNT(p) FROM Product p WHERE p.category.id = :categoryId")
     Long countProductsByCategoryId(@Param("categoryId") UUID categoryId);
+
+    @Query("SELECT COUNT(a) FROM Auction a " +
+            "WHERE a.product.category.id = :categoryId")
+    Long countAuctionsByCategoryId(@Param("categoryId") UUID categoryId);
 }

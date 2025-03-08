@@ -1,5 +1,7 @@
 package org.anas.bidderx_rest.service.implementations;
 
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.Path;
 import jakarta.transaction.Transactional;
 import org.anas.bidderx_rest.domain.AppUser;
 import org.anas.bidderx_rest.domain.Auction;
@@ -19,6 +21,7 @@ import org.anas.bidderx_rest.service.dto.mapper.AuctionMapper;
 import org.anas.bidderx_rest.web.vm.CreateAuctionVM;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
@@ -48,28 +51,94 @@ public class AuctionServiceImpl implements AuctionService {
         this.productService = productService;
     }
 
-    public Page<AuctionDTO> getAuctionsByFilter(UUID categoryId, Double minPrice, Double maxPrice, Pageable pageable) {
-        Specification<Auction> spec = Specification.where(null);
 
-        if (categoryId != null) {
-            spec = spec.and((root, query, cb) ->
-                    cb.equal(root.get("product").get("category").get("id"), categoryId) // Path: Auction → Product → Category
-            );
-        }
+    public List<AuctionDTO> searchAuctions(String query, int limit) {
+        String searchTerm = "%" + query.toLowerCase() + "%";
 
-        if (minPrice != null) {
-            spec = spec.and((root, query, cb) ->
-                    cb.greaterThanOrEqualTo(root.get("currentPrice"), minPrice));
-        }
-
-        if (maxPrice != null) {
-            spec = spec.and((root, query, cb) ->
-                    cb.lessThanOrEqualTo(root.get("currentPrice"), maxPrice));
-        }
-
-        return auctionRepository.findAll(spec, pageable)
-                .map(auctionMapper::toDTO);
+        List<Auction> auctions = auctionRepository.findBySearchTerm(searchTerm, limit);
+        return auctions.stream()
+                .map(auctionMapper::toDTO)
+                .collect(Collectors.toList());
     }
+
+    public Page<AuctionDTO> getAuctionsByFilter(
+            UUID categoryId,
+            Double minPrice,
+            Double maxPrice,
+            AuctionStatus status,
+            String query,
+            Pageable pageable
+    ) {
+        Specification<Auction> spec = buildSpecification(categoryId, minPrice, maxPrice, status, query);
+        return auctionRepository.findAll(spec, pageable).map(auctionMapper::toDTO);
+    }
+
+    private Specification<Auction> buildSpecification(
+            UUID categoryId,
+            Double minPrice,
+            Double maxPrice,
+            AuctionStatus status,
+            String query
+    ) {
+        Specification<Auction> spec = Specification.where(statusSpec(status))
+                .and(categorySpec(categoryId))
+                .and(minPriceSpec(minPrice))
+                .and(maxPriceSpec(maxPrice));
+
+        if (query != null && !query.isEmpty()) {
+            Specification<Auction> querySpec = (root, queryObj, cb) -> {
+                String pattern = "%" + query.toLowerCase() + "%";
+                return cb.or(
+                        cb.like(cb.lower(root.get("title")), pattern),
+                        cb.like(cb.lower(root.get("description")), pattern)
+                );
+            };
+            spec = spec.and(querySpec);
+        }
+        return spec;
+    }
+
+
+
+    private Specification<Auction> statusSpec(AuctionStatus status) {
+        return (root, query, cb) -> {
+            if (status == null) return null;
+            return cb.equal(root.get("status"), status);
+        };
+    }
+
+    private Specification<Auction> categorySpec(UUID categoryId) {
+        return (root, query, cb) -> {
+            if (categoryId == null) return null;
+            return cb.equal(
+                    root.get("product").get("category").get("id"),
+                    categoryId
+            );
+        };
+    }
+
+    private Specification<Auction> minPriceSpec(Double minPrice) {
+        return (root, query, cb) -> {
+            if (minPrice == null) return null;
+            BigDecimal min = BigDecimal.valueOf(minPrice);
+            return cb.greaterThanOrEqualTo(
+                    root.get("currentPrice"),
+                    min
+            );
+        };
+    }
+
+    private Specification<Auction> maxPriceSpec(Double maxPrice) {
+        return (root, query, cb) -> {
+            if (maxPrice == null) return null;
+            BigDecimal max = BigDecimal.valueOf(maxPrice);
+            return cb.lessThanOrEqualTo(
+                    root.get("currentPrice"),
+                    max
+            );
+        };
+    }
+
 
     @Override
     public Page<AuctionDTO> getLiveAuctions(Pageable pageable) {

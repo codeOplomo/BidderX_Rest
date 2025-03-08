@@ -11,9 +11,14 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface CategoryMapper {
         @Mapping(target = "productsCount", expression = "java(countProducts(category, categoryRepository))")
+        @Mapping(target = "auctionsCount", expression = "java(countAuctions(category, categoryRepository))")
         CategoryDTO toCategoryDTO(Category category, @Context CategoryRepository categoryRepository);
 
         default Long countProducts(Category category, @Context CategoryRepository categoryRepository) {
                 return categoryRepository.countProductsByCategoryId(category.getId());
+        }
+
+        default Long countAuctions(Category category, @Context CategoryRepository categoryRepository) {
+                return categoryRepository.countAuctionsByCategoryId(category.getId());
         }
 }
