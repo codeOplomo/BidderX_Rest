@@ -40,6 +40,21 @@ public class WalletServiceImpl implements WalletService {
         this.walletValidator = walletValidator;
     }
 
+    @Transactional
+    public WalletDTO withdrawFunds(UUID walletId, BigDecimal amount) {
+        Wallet wallet = findById(walletId);
+
+        if (wallet.getBalance().compareTo(amount) < 0) {
+            throw new InsufficientFundsException("Insufficient balance");
+        }
+
+        wallet.setBalance(wallet.getBalance().subtract(amount));
+        walletRepository.save(wallet);
+
+
+        return walletMapper.toDto(wallet);
+    }
+
     @Override
     public WalletDTO findByUser(AppUser user) {
         return walletRepository.findByUser(user)

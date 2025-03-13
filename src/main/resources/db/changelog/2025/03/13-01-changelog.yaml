@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1740929999
+      author: QLIKY
+      changes:
+        - addColumn:
+            tableName: "users"
+            columns:
+              - column:
+                  name: owner_request_status
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+                  defaultValue: 'NONE'

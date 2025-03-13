@@ -9,7 +9,8 @@ public class BidDTO {
     private BigDecimal bidAmount;
     private LocalDateTime bidTime;
     private UUID auctionId;
-    private UUID bidderId;
+    private ProfileDTO bidder;
+//    private String bidderEmail;
 
     public UUID getBidId() {
         return bidId;
@@ -43,11 +44,12 @@ public class BidDTO {
         this.auctionId = auctionId;
     }
 
-    public UUID getBidderId() {
-        return bidderId;
+
+    public ProfileDTO getBidder() {
+        return bidder;
     }
 
-    public void setBidderId(UUID bidderId) {
-        this.bidderId = bidderId;
+    public void setBidder(ProfileDTO bidder) {
+        this.bidder = bidder;
     }
 }

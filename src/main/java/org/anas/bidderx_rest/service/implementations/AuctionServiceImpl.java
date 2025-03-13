@@ -5,11 +5,13 @@ import jakarta.persistence.criteria.Path;
 import jakarta.transaction.Transactional;
 import org.anas.bidderx_rest.domain.AppUser;
 import org.anas.bidderx_rest.domain.Auction;
+import org.anas.bidderx_rest.domain.Bid;
 import org.anas.bidderx_rest.domain.Product;
 import org.anas.bidderx_rest.domain.enums.AuctionStatus;
 import org.anas.bidderx_rest.domain.enums.AuctionType;
 import org.anas.bidderx_rest.exceptions.*;
 import org.anas.bidderx_rest.repository.AuctionRepository;
+import org.anas.bidderx_rest.schedulers.AuctionScheduler;
 import org.anas.bidderx_rest.service.AuctionService;
 import org.anas.bidderx_rest.service.FileStorageService;
 import org.anas.bidderx_rest.service.ProductService;
@@ -17,8 +19,10 @@ import org.anas.bidderx_rest.service.UserService;
 import org.anas.bidderx_rest.service.dto.AuctionDTO;
 import org.anas.bidderx_rest.service.dto.AuctionsStateDTO;
 import org.anas.bidderx_rest.service.dto.ProfileDTO;
+import org.anas.bidderx_rest.service.dto.mapper.AppUserMapper;
 import org.anas.bidderx_rest.service.dto.mapper.AuctionMapper;
 import org.anas.bidderx_rest.web.vm.CreateAuctionVM;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -28,7 +32,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -37,18 +43,69 @@ public class AuctionServiceImpl implements AuctionService {
     private final UserService userService;
     private final AuctionRepository auctionRepository;
     private final AuctionMapper auctionMapper;
+    private final AppUserMapper profileMapper;
     private final ProductService productService;
+    private final AuctionScheduler auctionScheduler;
 
     public AuctionServiceImpl(
             UserService userService,
             AuctionRepository auctionRepository,
             AuctionMapper auctionMapper,
-            ProductService productService
+            AppUserMapper profileMapper,
+            ProductService productService,
+            @Lazy AuctionScheduler auctionScheduler
     ) {
         this.userService = userService;
         this.auctionRepository = auctionRepository;
         this.auctionMapper = auctionMapper;
+        this.profileMapper = profileMapper;
         this.productService = productService;
+        this.auctionScheduler = auctionScheduler;
+    }
+
+
+    @Override
+    public Page<AuctionDTO> findWonAuctionsByEmail(String email, Pageable pageable) {
+        AppUser user = userService.findUserByEmail(email);
+        Page<Auction> auctions = auctionRepository.findByWinnerIdAndStatus(
+                user.getId(),
+                AuctionStatus.ENDED,
+                pageable
+        );
+
+        return auctions.map(auction -> {
+            AuctionDTO dto = auctionMapper.toDTO(auction);
+            // Populate winner details
+            if (auction.getWinnerId() != null) {
+                AppUser winner = userService.findUserById(auction.getWinnerId());
+                dto.setWinner(profileMapper.toProfileDTO(winner));
+            }
+            return dto;
+        });
+    }
+
+    @Override
+    @Transactional
+    public void endAuction(UUID auctionId) {
+        // Retrieve the auction
+        Auction auction = auctionRepository.findById(auctionId)
+                .orElseThrow(() -> new AuctionNotFoundException("Auction not found with ID: " + auctionId));
+
+        // Determine the winner by finding the highest bid
+        Bid winningBid = auction.getBids().stream()
+                .max(Comparator.comparing(Bid::getBidAmount))
+                .orElse(null);
+
+        // If there's a winning bid, set the winnerId (make sure Auction has a field for this)
+        if (winningBid != null) {
+            auction.setWinnerId(winningBid.getUser().getId());
+        }
+
+        // Update the auction status to ENDED
+        auction.setStatus(AuctionStatus.ENDED);
+
+        // Save the auction updates
+        auctionRepository.save(auction);
     }
 
 
@@ -66,10 +123,11 @@ public class AuctionServiceImpl implements AuctionService {
             Double minPrice,
             Double maxPrice,
             AuctionStatus status,
+            AuctionType type,
             String query,
             Pageable pageable
     ) {
-        Specification<Auction> spec = buildSpecification(categoryId, minPrice, maxPrice, status, query);
+        Specification<Auction> spec = buildSpecification(categoryId, minPrice, maxPrice, status, type, query);
         return auctionRepository.findAll(spec, pageable).map(auctionMapper::toDTO);
     }
 
@@ -78,12 +136,14 @@ public class AuctionServiceImpl implements AuctionService {
             Double minPrice,
             Double maxPrice,
             AuctionStatus status,
+            AuctionType type,
             String query
     ) {
         Specification<Auction> spec = Specification.where(statusSpec(status))
                 .and(categorySpec(categoryId))
                 .and(minPriceSpec(minPrice))
-                .and(maxPriceSpec(maxPrice));
+                .and(maxPriceSpec(maxPrice))
+                .and(typeSpec(type));
 
         if (query != null && !query.isEmpty()) {
             Specification<Auction> querySpec = (root, queryObj, cb) -> {
@@ -99,6 +159,13 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
 
+
+    private Specification<Auction> typeSpec(AuctionType type) {
+        return (root, query, cb) -> {
+            if (type == null) return null;
+            return cb.equal(root.get("auctionType"), type);
+        };
+    }
 
     private Specification<Auction> statusSpec(AuctionStatus status) {
         return (root, query, cb) -> {
@@ -141,15 +208,16 @@ public class AuctionServiceImpl implements AuctionService {
 
 
     @Override
-    public Page<AuctionDTO> getLiveAuctions(Pageable pageable) {
+    public Page<AuctionDTO> getLiveAuctions(Pageable pageable, AppUser user) {
         Page<Auction> auctions = auctionRepository.findByStatus(AuctionStatus.APPROVED, pageable);
         return auctions.map(auction -> {
             AuctionDTO dto = auctionMapper.toDTO(auction);
-            // Set duration with a default value of 0 if null
             dto.setDuration(auction.getAuctionDurationInHours() != null ? auction.getAuctionDurationInHours() : 0);
+            setLikeStatus(auction, dto, user);
             return dto;
         });
     }
+
 
     @Override
     public AuctionDTO getAuctionById(UUID auctionId, AppUser user) {
@@ -158,6 +226,10 @@ public class AuctionServiceImpl implements AuctionService {
 
         AuctionDTO dto = auctionMapper.toDTO(auction);
         setLikeStatus(auction, dto, user);
+        if (auction.getWinnerId() != null) {
+            AppUser winnerUser = userService.findUserById(auction.getWinnerId());
+            dto.setWinner(profileMapper.toProfileDTO(winnerUser));
+        }
         return dto;
     }
 
@@ -173,12 +245,51 @@ public class AuctionServiceImpl implements AuctionService {
 
     public AuctionsStateDTO getAuctionsStats() {
         AuctionsStateDTO stats = new AuctionsStateDTO();
+
+        // Basic counts based on status
         stats.setTotalAuctions(auctionRepository.countByStatus(AuctionStatus.APPROVED));
         stats.setPendingRequests(auctionRepository.countByStatus(AuctionStatus.PENDING));
-        stats.setActiveUsers(0L);  // Set to 0L for now or implement the real logic
-        stats.setTotalRevenue(0L); // Set to 0L for now or implement the real logic
+        stats.setActiveAuctions(auctionRepository.countActiveAuctions());
+        stats.setCompletedAuctions(auctionRepository.countCompletedAuctions());
+
+        // Average winning bid from completed auctions
+        stats.setAverageWinningBid(auctionRepository.findAverageWinningBid());
+
+        // Total bids and likes
+        stats.setTotalBids(auctionRepository.countTotalBids());
+        stats.setTotalLikes(auctionRepository.countTotalLikes());
+
+        // Ongoing auctions based on time window
+        stats.setOngoingAuctions(auctionRepository.countOngoingAuctions());
+
+        // Revenue per owner: Convert Object[] results to a Map<String, BigDecimal>
+        List<Object[]> revenueList = auctionRepository.findRevenuePerOwner();
+        Map<String, BigDecimal> revenuePerOwner = new HashMap<>();
+        for (Object[] row : revenueList) {
+            String ownerEmail = (String) row[0];
+            BigDecimal revenue = (BigDecimal) row[1];
+            revenuePerOwner.put(ownerEmail, revenue);
+        }
+        stats.setRevenuePerOwner(revenuePerOwner);
+
+        // Today revenue: Define start and end of today
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfToday = today.atStartOfDay();
+        LocalDateTime endOfToday = today.atTime(LocalTime.MAX);
+        BigDecimal todayRev = auctionRepository.findTodayRevenue(startOfToday, endOfToday);
+        stats.setTodayRevenue(todayRev != null ? todayRev.longValue() : 0L);
+
+        // Average bid amount
+        BigDecimal avgBid = auctionRepository.findAverageBidAmount();
+        stats.setAverageBidAmount(avgBid != null ? avgBid.longValue() : 0L);
+
+        // For fields like activeUsers or totalRevenue you can implement similar queries or business logic
+        stats.setActiveUsers(0L);  // Replace with actual logic if available
+        stats.setTotalRevenue(0L); // Replace with actual logic if available
+
         return stats;
     }
+
 
     @Override
     public Page<AuctionDTO> findPendingAuctions(Pageable pageable) {
@@ -219,6 +330,8 @@ public class AuctionServiceImpl implements AuctionService {
         }
 
         auction = auctionRepository.save(auction);
+
+        auctionScheduler.scheduleAuctionEnd(auction);
         return auctionMapper.toDTO(auction);
     }
 
@@ -277,6 +390,21 @@ public class AuctionServiceImpl implements AuctionService {
                     .anyMatch(reaction -> reaction.getUser().getEmail().equals(email));
             dto.setLikedByCurrentUser(likedByCurrentUser);
 
+            if (auction.getStatus() == AuctionStatus.ENDED && auction.getWinnerId() != null) {
+                AppUser winner = userService.findUserById(auction.getWinnerId()); // Fetch the winner
+                if (winner != null) {
+                    ProfileDTO winnerProfile = new ProfileDTO();
+                    winnerProfile.setEmail(winner.getEmail());
+                    winnerProfile.setProfileIdentifier(winner.getProfileIdentifier());
+                    winnerProfile.setPhoneNumber(winner.getPhoneNumber());
+                    winnerProfile.setFirstName(winner.getFirstName());
+                    winnerProfile.setLastName(winner.getLastName());
+                    winnerProfile.setImageUrl(winner.getImageUrl());
+                    winnerProfile.setCoverImageUrl(winner.getCoverImageUrl());
+
+                    dto.setWinner(winnerProfile);
+                }
+            }
             return dto;
         });
     }

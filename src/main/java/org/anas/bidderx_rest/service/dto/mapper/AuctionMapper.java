@@ -11,6 +11,7 @@ public interface AuctionMapper {
 
     @Mapping(target = "product", source = "product")
     @Mapping(target = "type", source = "auctionType")
+    @Mapping(target = "currentBid", source = "currentPrice")
     @Mapping(target = "category", source = "product.category")
     @Mapping(target = "reactionsCount", expression = "java(auction.getAuctionReactions() != null ? auction.getAuctionReactions().size() : 0)")
     @Mapping(target = "likedByCurrentUser", ignore = true)

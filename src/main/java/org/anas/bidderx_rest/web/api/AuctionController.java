@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Min;
 import org.anas.bidderx_rest.domain.AppUser;
 import org.anas.bidderx_rest.domain.Auction;
 import org.anas.bidderx_rest.domain.enums.AuctionStatus;
+import org.anas.bidderx_rest.domain.enums.AuctionType;
 import org.anas.bidderx_rest.exceptions.InvalidProductRequestException;
 import org.anas.bidderx_rest.service.AuctionService;
 import org.anas.bidderx_rest.service.dto.ApiResponse;
@@ -37,6 +38,52 @@ public class AuctionController {
     }
 
 
+    @GetMapping("/victories")
+    public ResponseEntity<ApiResponse<Page<AuctionDTO>>> getUserWonAuctions(
+            @RequestParam String email,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<AuctionDTO> wonAuctions = auctionService.findWonAuctionsByEmail(email, pageable);
+        return ResponseEntity.ok(new ApiResponse<>("Won auctions retrieved successfully", wonAuctions));
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity<ApiResponse<AuctionDTO>> createAuction(
+            @RequestPart("vm") @Valid CreateAuctionVM request,
+            @RequestPart(value = "mainImage", required = false) MultipartFile mainImage,
+            @RequestPart(value = "additionalImages", required = false) List<MultipartFile> additionalImages,
+            @AuthenticationPrincipal AppUser authenticatedUser
+    ) {
+        AuctionDTO auctionDTO = auctionService.createAuction(request, mainImage, additionalImages, authenticatedUser);
+        return ResponseEntity.ok(new ApiResponse<>("Auction created successfully", auctionDTO));
+    }
+
+
+    @GetMapping("/user")
+    public ResponseEntity<ApiResponse<Page<AuctionDTO>>> getUserAuctions(
+            @RequestParam String email,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<AuctionDTO> userAuctions = auctionService.findAuctionsByEmail(email, pageable);
+        return ResponseEntity.ok(new ApiResponse<>("Auctions retrieved successfully", userAuctions));
+    }
+
+
+    @GetMapping("/liked")
+    public ResponseEntity<ApiResponse<Page<AuctionDTO>>> getUserLikedAuctions(
+            @RequestParam String email,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<AuctionDTO> likedAuctions = auctionService.findLikedAuctionsByEmail(email, pageable);
+        return ResponseEntity.ok(new ApiResponse<>("Liked auctions retrieved successfully", likedAuctions));
+    }
+
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<List<AuctionDTO>>> searchAuctions(
             @RequestParam String q,
@@ -52,6 +99,7 @@ public class AuctionController {
             @RequestParam(required = false) @Min(0) Double minPrice,
             @RequestParam(required = false) @Min(0) Double maxPrice,
             @RequestParam(required = false) AuctionStatus status,
+            @RequestParam(required = false) AuctionType type,
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "DESC") String sortOrder,
             @RequestParam(defaultValue = "0") int page,
@@ -59,7 +107,7 @@ public class AuctionController {
 
         Sort sort = Sort.by(Sort.Direction.fromString(sortOrder), "startTime");
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<AuctionDTO> auctions = auctionService.getAuctionsByFilter(categoryId, minPrice, maxPrice, status, q, pageable);
+        Page<AuctionDTO> auctions = auctionService.getAuctionsByFilter(categoryId, minPrice, maxPrice, status, type, q, pageable);
         return ResponseEntity.ok(new ApiResponse<>("Auctions retrieved successfully", auctions));
     }
 
@@ -67,10 +115,11 @@ public class AuctionController {
     @GetMapping("/live")
     public ResponseEntity<ApiResponse<Page<AuctionDTO>>> getLiveAuctions(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "8") int size) {
+            @RequestParam(defaultValue = "8") int size,
+            @AuthenticationPrincipal AppUser user) {
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<AuctionDTO> auctions = auctionService.getLiveAuctions(pageable);
+        Page<AuctionDTO> auctions = auctionService.getLiveAuctions(pageable, user);
         return ResponseEntity.ok(new ApiResponse<>("Live auctions retrieved successfully", auctions));
     }
 
@@ -117,49 +166,5 @@ public class AuctionController {
         return ResponseEntity.ok(new ApiResponse<>("Auction rejected successfully", auctionDTO));
     }
 
-    @PostMapping("/create")
-    public ResponseEntity<ApiResponse<AuctionDTO>> createAuction(
-            @RequestPart("vm") @Valid CreateAuctionVM request,
-            @RequestPart(value = "mainImage", required = false) MultipartFile mainImage,
-            @RequestPart(value = "additionalImages", required = false) List<MultipartFile> additionalImages,
-            @AuthenticationPrincipal AppUser authenticatedUser
-    ) {
-        AuctionDTO auctionDTO = auctionService.createAuction(request, mainImage, additionalImages, authenticatedUser);
-        return ResponseEntity.ok(new ApiResponse<>("Auction created successfully", auctionDTO));
-    }
-
-
-    @GetMapping("/user")
-    public ResponseEntity<ApiResponse<Page<AuctionDTO>>> getUserAuctions(
-            @RequestParam String email,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size
-    ) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<AuctionDTO> userAuctions = auctionService.findAuctionsByEmail(email, pageable);
-        return ResponseEntity.ok(new ApiResponse<>("Auctions retrieved successfully", userAuctions));
-    }
-
-
-    @GetMapping("/liked")
-    public ResponseEntity<ApiResponse<Page<AuctionDTO>>> getUserLikedAuctions(
-            @RequestParam String email,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size
-    ) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<AuctionDTO> likedAuctions = auctionService.findLikedAuctionsByEmail(email, pageable);
-        return ResponseEntity.ok(new ApiResponse<>("Liked auctions retrieved successfully", likedAuctions));
-    }
 
 }
-//@GetMapping("/victories")
-//    public ResponseEntity<ApiResponse<Page<AuctionDTO>>> getUserWonAuctions(
-//            @RequestParam String email,
-//            @RequestParam(defaultValue = "0") int page,
-//            @RequestParam(defaultValue = "12") int size
-//    ) {
-//        Pageable pageable = PageRequest.of(page, size);
-//        Page<AuctionDTO> wonAuctions = auctionService.findWonAuctionsByEmail(email, pageable);
-//        return ResponseEntity.ok(new ApiResponse<>("Won auctions retrieved successfully", wonAuctions));
-//    }

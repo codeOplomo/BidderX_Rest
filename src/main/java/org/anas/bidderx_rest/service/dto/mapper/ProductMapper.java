@@ -10,5 +10,6 @@ public interface ProductMapper {
 
     @Mapping(source = "category", target = "category")
     @Mapping(source = "owner.email", target = "ownerEmail")
+
     ProductDTO toProductDTO(Product product);
 }

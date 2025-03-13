@@ -23,6 +23,7 @@ public class AuctionDTO {
     private int reactionsCount;
     private boolean likedByCurrentUser;
     private List<ProfileDTO> bidders;
+    private ProfileDTO winner;
 
     public UUID getId() {
         return id;
@@ -146,5 +147,13 @@ public class AuctionDTO {
 
     public void setCategory(CategoryDTO category) {
         this.category = category;
+    }
+
+    public ProfileDTO getWinner() {
+        return winner;
+    }
+
+    public void setWinner(ProfileDTO winner) {
+        this.winner = winner;
     }
 }

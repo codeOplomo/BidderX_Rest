@@ -61,6 +61,12 @@ public class AuthController {
         authenticationService.resendVerificationCode(email);
         return ResponseEntity.ok(new MessageDTO("Verification code resent successfully."));
     }
+
+    @PostMapping("/logout")
+    public ResponseEntity<MessageDTO> logout() {
+//        authenticationService.logout(logoutRequest.getRefreshToken());
+        return ResponseEntity.ok(new MessageDTO("Logout successful"));
+    }
 }
 
 

@@ -1,6 +1,9 @@
 package org.anas.bidderx_rest.web.api;
 
 import jakarta.validation.Valid;
+import org.anas.bidderx_rest.domain.AppUser;
+import org.anas.bidderx_rest.domain.enums.OwnerRequestStatus;
+import org.anas.bidderx_rest.domain.enums.Role;
 import org.anas.bidderx_rest.service.UserService;
 import org.anas.bidderx_rest.service.dto.ApiResponse;
 import org.anas.bidderx_rest.service.dto.ProfileDTO;
@@ -11,6 +14,10 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
+import java.util.List;
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -18,6 +25,60 @@ public class UserController {
 
     public UserController(UserService userService) {
         this.userService = userService;
+    }
+
+
+    @PostMapping("/{email}/ban")
+    public ResponseEntity<ApiResponse<Void>> banUser(@PathVariable String email) {
+        userService.banUserByEmail(email);
+        return ResponseEntity.ok(new ApiResponse<>("User banned successfully", null));
+    }
+
+    @PostMapping("/{email}/unban")
+    public ResponseEntity<ApiResponse<Void>> unbanUser(@PathVariable String email) {
+        userService.unbanUserByEmail(email);
+        return ResponseEntity.ok(new ApiResponse<>("User unbanned successfully", null));
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<ProfileDTO>>> getAllUsers() {
+        List<ProfileDTO> users = userService.getAllUsers();
+        return ResponseEntity.ok(new ApiResponse<>("Users retrieved", users));
+    }
+
+    @PostMapping("/{email}/approve-owner")
+    public ResponseEntity<ApiResponse<Void>> approveOwnerRequest(@PathVariable String email) {
+        userService.approveOwnerRequestByEmail(email);
+        return ResponseEntity.ok(new ApiResponse<>("Owner request approved", null));
+    }
+
+    @PostMapping("/{email}/reject-owner")
+    public ResponseEntity<ApiResponse<Void>> rejectOwnerRequest(@PathVariable String email) {
+        userService.rejectOwnerRequestByEmail(email);
+        return ResponseEntity.ok(new ApiResponse<>("Owner request rejected", null));
+    }
+
+    @PostMapping("/become-owner")
+    public ResponseEntity<ApiResponse<Void>> requestOwnerUpgrade(@AuthenticationPrincipal AppUser currentUser) {
+        // Retrieve current user from security context or principal
+        String email = currentUser.getUsername();
+        AppUser user = userService.findUserByEmail(email);
+
+        // Set the owner request status to PENDING
+        user.setOwnerRequestStatus(OwnerRequestStatus.PENDING);
+        userService.save(user);
+
+        // Optionally trigger an email/notification to admin here
+
+        return ResponseEntity.ok(new ApiResponse<>("Your owner upgrade request has been submitted.", null));
+    }
+
+    // UserController.java
+    @GetMapping("/{email}/profile")
+    public ResponseEntity<ApiResponse<ProfileDTO>> getUserProfileByEmail(
+            @PathVariable String email) {
+        ProfileDTO profile = userService.getUserProfileByEmail(email);
+        return ResponseEntity.ok(new ApiResponse<>("Profile retrieved", profile));
     }
 
     @GetMapping("/profile")

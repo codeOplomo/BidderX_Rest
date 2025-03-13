@@ -2,6 +2,7 @@ package org.anas.bidderx_rest.domain;
 
 import jakarta.persistence.*;
 import org.anas.bidderx_rest.config.RoleAuthorityMapper;
+import org.anas.bidderx_rest.domain.enums.OwnerRequestStatus;
 import org.anas.bidderx_rest.domain.enums.Role;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -52,7 +53,7 @@ public class AppUser implements UserDetails {
     private boolean hasWallet = false;
 
     @Column(name = "is_banned", nullable = false)
-    private boolean isBanned;
+    private boolean Banned;
 
     // One-to-Many relationship with Collection
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -73,6 +74,10 @@ public class AppUser implements UserDetails {
     private String imageUrl;
 
     private String coverImageUrl;
+
+    @Column(name = "owner_request_status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private OwnerRequestStatus ownerRequestStatus = OwnerRequestStatus.NONE;
 
 
     // Constructors
@@ -271,11 +276,11 @@ public class AppUser implements UserDetails {
     }
 
     public boolean isBanned() {
-        return isBanned;
+        return Banned;
     }
 
     public void setBanned(boolean banned) {
-        isBanned = banned;
+        Banned = banned;
     }
 
     public String getEmail() {
@@ -342,7 +347,15 @@ public class AppUser implements UserDetails {
         this.hasWallet = hasWallet;
     }
 
-//    public String getImageName() {
+    public OwnerRequestStatus getOwnerRequestStatus() {
+        return ownerRequestStatus;
+    }
+
+    public void setOwnerRequestStatus(OwnerRequestStatus ownerRequestStatus) {
+        this.ownerRequestStatus = ownerRequestStatus;
+    }
+
+    //    public String getImageName() {
 //        return imageName;
 //    }
 //

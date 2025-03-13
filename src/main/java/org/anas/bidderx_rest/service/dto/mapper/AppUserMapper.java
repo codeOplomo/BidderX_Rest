@@ -11,6 +11,7 @@ import org.mapstruct.Mapping;
 public interface AppUserMapper {
 
     @Mapping(target = "hasWallet", source = "hasWallet")
+    @Mapping(target = "collections", ignore = true)
     ProfileDTO toProfileDTO(AppUser user);
 
 }

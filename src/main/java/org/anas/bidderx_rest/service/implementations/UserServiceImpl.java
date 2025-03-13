@@ -1,7 +1,9 @@
 package org.anas.bidderx_rest.service.implementations;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.anas.bidderx_rest.domain.AppUser;
+import org.anas.bidderx_rest.domain.enums.OwnerRequestStatus;
 import org.anas.bidderx_rest.exceptions.*;
 import org.anas.bidderx_rest.repository.AppUserRepository;
 import org.anas.bidderx_rest.service.UserService;
@@ -15,6 +17,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -33,6 +39,54 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
+    public void banUserByEmail(String email) {
+        AppUser user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with email: " + email));
+        user.setBanned(true);
+        userRepository.save(user);
+    }
+
+    @Override
+    public void unbanUserByEmail(String email) {
+        AppUser user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with email: " + email));
+        user.setBanned(false);
+        userRepository.save(user);
+    }
+
+    @Override
+    public List<ProfileDTO> getAllUsers() {
+        List<AppUser> users = userRepository.findAll();
+        return users.stream()
+                .map(appUserMapper::toProfileDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void approveOwnerRequestByEmail(String email) {
+        AppUser user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with email: " + email));
+
+        user.setOwnerRequestStatus(OwnerRequestStatus.APPROVED);
+        userRepository.save(user);
+    }
+
+    @Override
+    public void rejectOwnerRequestByEmail(String email) {
+        AppUser user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with email: " + email));
+
+        user.setOwnerRequestStatus(OwnerRequestStatus.REJECTED);
+        userRepository.save(user);
+    }
+
+    @Override
+    public AppUser findUserById(UUID id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+    }
+
+    @Override
     public AppUser save(AppUser user) {
         return userRepository.save(user);
     }
@@ -40,6 +94,14 @@ public class UserServiceImpl implements UserService {
     public AppUser findUserByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+    }
+
+    public ProfileDTO getUserProfileByEmail(String email) {
+        AppUser user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        ProfileDTO profile = appUserMapper.toProfileDTO(user);
+        profile.setRoles(user.getRoles().stream().map(Enum::name).collect(Collectors.toList()));
+        return profile;
     }
 
     @Override

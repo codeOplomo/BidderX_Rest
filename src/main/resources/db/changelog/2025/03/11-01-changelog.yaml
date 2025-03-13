@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1740919999
+      author: QLIKY
+      changes:
+        - addColumn:
+            tableName: auctions
+            columns:
+              - column:
+                  name: winner_id
+                  type: uuid
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_auction_winner
+                    references: users(id)

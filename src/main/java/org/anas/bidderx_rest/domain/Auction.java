@@ -39,6 +39,9 @@ public class Auction {
     @OneToMany(mappedBy = "auction", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Bid> bids = new ArrayList<>();
 
+    @Column(name = "winner_id")
+    private UUID winnerId;
+
     @OneToMany(mappedBy = "auction", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AuctionReaction> auctionReactions = new ArrayList<>();
 
@@ -228,6 +231,14 @@ public class Auction {
 
     public void setAuctionDurationInHours(Integer auctionDurationInHours) {
         this.auctionDurationInHours = auctionDurationInHours;
+    }
+
+    public UUID getWinnerId() {
+        return winnerId;
+    }
+
+    public void setWinnerId(UUID winnerId) {
+        this.winnerId = winnerId;
     }
 }
 

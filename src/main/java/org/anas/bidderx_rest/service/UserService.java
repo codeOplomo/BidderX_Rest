@@ -8,8 +8,25 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+import java.util.UUID;
+
 public interface UserService {
+    void unbanUserByEmail(String email);
+
+    void banUserByEmail(String email);
+
+    void approveOwnerRequestByEmail(String email);
+
+    void rejectOwnerRequestByEmail(String email);
+
+    List<ProfileDTO> getAllUsers();
+
+    AppUser findUserById(UUID id);
+
     AppUser save(AppUser user);
+
+    ProfileDTO getUserProfileByEmail(String email);
 
     AppUser findUserByEmail(String email);
 

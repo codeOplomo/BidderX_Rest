@@ -1,6 +1,11 @@
 package org.anas.bidderx_rest.service.dto;
 
+import org.anas.bidderx_rest.domain.enums.OwnerRequestStatus;
+import org.anas.bidderx_rest.domain.enums.Role;
+
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class ProfileDTO {
     private String email;
@@ -13,6 +18,8 @@ public class ProfileDTO {
     private WalletDTO wallet;
     private List<CollectionDTO> collections;
     private boolean hasWallet;
+    private List<String> roles;
+    private OwnerRequestStatus ownerRequestStatus;
 
 
     public ProfileDTO() {
@@ -96,5 +103,21 @@ public class ProfileDTO {
 
     public void setHasWallet(boolean hasWallet) {
         this.hasWallet = hasWallet;
+    }
+
+    public List<String> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<String> roles) {
+        this.roles = roles;
+    }
+
+    public OwnerRequestStatus getOwnerRequestStatus() {
+        return ownerRequestStatus;
+    }
+
+    public void setOwnerRequestStatus(OwnerRequestStatus ownerRequestStatus) {
+        this.ownerRequestStatus = ownerRequestStatus;
     }
 }
