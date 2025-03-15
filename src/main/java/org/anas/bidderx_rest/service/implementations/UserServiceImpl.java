@@ -4,6 +4,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.anas.bidderx_rest.domain.AppUser;
 import org.anas.bidderx_rest.domain.enums.OwnerRequestStatus;
+import org.anas.bidderx_rest.domain.enums.Role;
 import org.anas.bidderx_rest.exceptions.*;
 import org.anas.bidderx_rest.repository.AppUserRepository;
 import org.anas.bidderx_rest.service.UserService;
@@ -67,6 +68,7 @@ public class UserServiceImpl implements UserService {
         AppUser user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with email: " + email));
 
+        user.getRoles().add(Role.OWNER);
         user.setOwnerRequestStatus(OwnerRequestStatus.APPROVED);
         userRepository.save(user);
     }

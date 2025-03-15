@@ -11,9 +11,13 @@ import java.util.UUID;
 
 
 public interface WalletService {
+    Wallet saveWallet(Wallet wallet);
+
     WalletDTO withdrawFunds(UUID walletId, BigDecimal amount);
 
     WalletDTO findByUser(AppUser user);
+
+    Wallet findWalletByUser(AppUser user);
 
     Wallet findById(UUID walletId);
 

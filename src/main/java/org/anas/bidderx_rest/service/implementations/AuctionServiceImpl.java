@@ -3,19 +3,13 @@ package org.anas.bidderx_rest.service.implementations;
 import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.Path;
 import jakarta.transaction.Transactional;
-import org.anas.bidderx_rest.domain.AppUser;
-import org.anas.bidderx_rest.domain.Auction;
-import org.anas.bidderx_rest.domain.Bid;
-import org.anas.bidderx_rest.domain.Product;
+import org.anas.bidderx_rest.domain.*;
 import org.anas.bidderx_rest.domain.enums.AuctionStatus;
 import org.anas.bidderx_rest.domain.enums.AuctionType;
 import org.anas.bidderx_rest.exceptions.*;
 import org.anas.bidderx_rest.repository.AuctionRepository;
 import org.anas.bidderx_rest.schedulers.AuctionScheduler;
-import org.anas.bidderx_rest.service.AuctionService;
-import org.anas.bidderx_rest.service.FileStorageService;
-import org.anas.bidderx_rest.service.ProductService;
-import org.anas.bidderx_rest.service.UserService;
+import org.anas.bidderx_rest.service.*;
 import org.anas.bidderx_rest.service.dto.AuctionDTO;
 import org.anas.bidderx_rest.service.dto.AuctionsStateDTO;
 import org.anas.bidderx_rest.service.dto.ProfileDTO;
@@ -41,6 +35,7 @@ import java.util.stream.Collectors;
 @Service
 public class AuctionServiceImpl implements AuctionService {
     private final UserService userService;
+    private final WalletService walletService;
     private final AuctionRepository auctionRepository;
     private final AuctionMapper auctionMapper;
     private final AppUserMapper profileMapper;
@@ -49,6 +44,7 @@ public class AuctionServiceImpl implements AuctionService {
 
     public AuctionServiceImpl(
             UserService userService,
+            WalletService walletService,
             AuctionRepository auctionRepository,
             AuctionMapper auctionMapper,
             AppUserMapper profileMapper,
@@ -56,6 +52,7 @@ public class AuctionServiceImpl implements AuctionService {
             @Lazy AuctionScheduler auctionScheduler
     ) {
         this.userService = userService;
+        this.walletService = walletService;
         this.auctionRepository = auctionRepository;
         this.auctionMapper = auctionMapper;
         this.profileMapper = profileMapper;
@@ -103,11 +100,42 @@ public class AuctionServiceImpl implements AuctionService {
 
         // Update the auction status to ENDED
         auction.setStatus(AuctionStatus.ENDED);
+        refundLosingBids(auction, winningBid);
 
         // Save the auction updates
         auctionRepository.save(auction);
     }
 
+
+    private void refundLosingBids(Auction auction, Bid winningBid) {
+        // Map to hold total refundable amount per bidder
+        Map<UUID, BigDecimal> refundAmounts = new HashMap<>();
+
+        for (Bid bid : auction.getBids()) {
+            UUID bidderId = bid.getUser().getId();
+            // For the winning bidder, only refund the bids that are not the winning bid
+            if (winningBid != null && bidderId.equals(winningBid.getUser().getId())) {
+                // Skip refund for the winning bid, but refund other bids from the same user
+                if (!bid.getId().equals(winningBid.getId())) {
+                    refundAmounts.merge(bidderId, bid.getBidAmount(), BigDecimal::add);
+                }
+            } else {
+                // For losing bidders, refund the full bid amount
+                refundAmounts.merge(bidderId, bid.getBidAmount(), BigDecimal::add);
+            }
+        }
+
+        // Process refunds for each bidder
+        refundAmounts.forEach((bidderId, amount) -> {
+            // Retrieve the user and their wallet
+            AppUser bidder = userService.findUserById(bidderId);
+            Wallet wallet = walletService.findWalletByUser(bidder);
+
+            // Refund the amount (credit the wallet)
+            wallet.setBalance(wallet.getBalance().add(amount));
+            walletService.saveWallet(wallet);
+        });
+    }
 
     public List<AuctionDTO> searchAuctions(String query, int limit) {
         String searchTerm = "%" + query.toLowerCase() + "%";

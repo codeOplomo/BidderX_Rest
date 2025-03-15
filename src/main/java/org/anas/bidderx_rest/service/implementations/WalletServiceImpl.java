@@ -40,6 +40,13 @@ public class WalletServiceImpl implements WalletService {
         this.walletValidator = walletValidator;
     }
 
+
+    @Override
+    @Transactional
+    public Wallet saveWallet(Wallet wallet) {
+        return walletRepository.save(wallet);
+    }
+
     @Transactional
     public WalletDTO withdrawFunds(UUID walletId, BigDecimal amount) {
         Wallet wallet = findById(walletId);
@@ -59,6 +66,12 @@ public class WalletServiceImpl implements WalletService {
     public WalletDTO findByUser(AppUser user) {
         return walletRepository.findByUser(user)
                 .map(walletMapper::toDto)
+                .orElseThrow(() -> new WalletNotFoundException("Wallet not found for user with id: " + user.getId()));
+    }
+
+    @Override
+    public  Wallet findWalletByUser(AppUser user) {
+        return walletRepository.findByUser(user)
                 .orElseThrow(() -> new WalletNotFoundException("Wallet not found for user with id: " + user.getId()));
     }
 
