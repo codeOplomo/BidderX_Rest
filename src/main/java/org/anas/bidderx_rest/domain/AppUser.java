@@ -53,7 +53,7 @@ public class AppUser implements UserDetails {
     private boolean hasWallet = false;
 
     @Column(name = "is_banned", nullable = false)
-    private boolean Banned;
+    private boolean banned;
 
     // One-to-Many relationship with Collection
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -276,11 +276,11 @@ public class AppUser implements UserDetails {
     }
 
     public boolean isBanned() {
-        return Banned;
+        return banned;
     }
 
     public void setBanned(boolean banned) {
-        Banned = banned;
+        banned = banned;
     }
 
     public String getEmail() {

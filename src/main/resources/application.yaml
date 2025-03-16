@@ -11,10 +11,6 @@ spring:
     change-log: db/changelog/master.yaml
     enabled: true
 
-    # Exclude auto-configuration for security
-    #autoconfigure:
-    # exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
-
   # Mail properties
   mail:
     host: sandbox.smtp.mailtrap.io
@@ -59,3 +55,7 @@ stripe:
   #   username: admin
   #   password: admin
   #   driver-class-name: org.postgresql.Driver
+
+    # Exclude auto-configuration for security
+    #autoconfigure:
+    # exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration

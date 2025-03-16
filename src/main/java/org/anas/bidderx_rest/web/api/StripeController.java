@@ -19,6 +19,7 @@ import org.anas.bidderx_rest.service.WalletService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -40,6 +41,7 @@ public class StripeController {
         this.userService = userService;
     }
 
+    @PreAuthorize("!principal.banned")
     @PostMapping("/confirm-payment")
     public ResponseEntity<?> confirmPayment(@RequestParam String sessionId) {
         try {

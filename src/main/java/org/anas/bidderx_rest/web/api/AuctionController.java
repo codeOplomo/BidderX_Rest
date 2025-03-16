@@ -20,6 +20,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -79,6 +80,7 @@ public class AuctionController {
         return ResponseEntity.ok(new ApiResponse<>("Won auctions retrieved successfully", wonAuctions));
     }
 
+    @PreAuthorize("!principal.banned and hasRole('OWNER')")
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<AuctionDTO>> createAuction(
             @RequestPart("vm") @Valid CreateAuctionVM request,
@@ -114,6 +116,7 @@ public class AuctionController {
         return ResponseEntity.ok(new ApiResponse<>("Liked auctions retrieved successfully", likedAuctions));
     }
 
+    @PreAuthorize("!principal.banned")
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<List<AuctionDTO>>> searchAuctions(
             @RequestParam String q,
@@ -178,6 +181,7 @@ public class AuctionController {
     }
 
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{auctionId}/approve")
     public ResponseEntity<ApiResponse<AuctionDTO>> approveAuction(
             @PathVariable UUID auctionId,
@@ -187,6 +191,7 @@ public class AuctionController {
     }
 
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{auctionId}/reject")
     public ResponseEntity<ApiResponse<AuctionDTO>> rejectAuction(
             @PathVariable UUID auctionId,

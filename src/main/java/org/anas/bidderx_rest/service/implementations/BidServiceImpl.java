@@ -42,6 +42,33 @@ public class BidServiceImpl implements BidService {
         this.bidMapper = bidMapper;
     }
 
+
+    @Transactional
+    public BidDTO placeBid(BidVM bidVM, AppUser bidder) {
+        Auction auction = auctionService.findById(bidVM.getAuctionId())
+                .orElseThrow(() -> new AuctionNotFoundException("Auction not found"));
+
+        AppUser managedBidder = userService.findUserByEmail(bidder.getEmail());
+
+        WalletDTO wallet = walletService.findByUser(bidder);
+
+        validateBid(auction, bidVM.getBidAmount(), bidder);
+
+        walletService.withdrawFunds(wallet.getId(), bidVM.getBidAmount());
+
+        Bid newBid = new Bid();
+        newBid.setAuction(auction);
+        newBid.setUser(managedBidder);
+        newBid.setBidAmount(bidVM.getBidAmount());
+        newBid.setBidTime(LocalDateTime.now());
+
+        Bid savedBid = bidRepository.save(newBid);
+
+        updateAuctionCurrentPrice(auction, newBid.getBidAmount());
+
+        return bidMapper.toBidDTO(savedBid);
+    }
+
     @Override
     public Page<BidDTO> getUserBidsForAuction(UUID auctionId, AppUser user, Pageable pageable) {
         // Validate auction exists
@@ -69,31 +96,6 @@ public class BidServiceImpl implements BidService {
         return bidsPage.map(bidMapper::toBidDTO);
     }
 
-    @Transactional
-    public BidDTO placeBid(BidVM bidVM, AppUser bidder) {
-        Auction auction = auctionService.findById(bidVM.getAuctionId())
-                .orElseThrow(() -> new AuctionNotFoundException("Auction not found"));
-
-        AppUser managedBidder = userService.findUserByEmail(bidder.getEmail());
-
-        WalletDTO wallet = walletService.findByUser(bidder);
-
-        validateBid(auction, bidVM.getBidAmount(), bidder);
-
-        walletService.withdrawFunds(wallet.getId(), bidVM.getBidAmount());
-
-        Bid newBid = new Bid();
-        newBid.setAuction(auction);
-        newBid.setUser(managedBidder);
-        newBid.setBidAmount(bidVM.getBidAmount());
-        newBid.setBidTime(LocalDateTime.now());
-
-        Bid savedBid = bidRepository.save(newBid);
-
-        updateAuctionCurrentPrice(auction, newBid.getBidAmount());
-
-        return bidMapper.toBidDTO(savedBid);
-    }
 
     private void validateBid(Auction auction, BigDecimal bidAmount, AppUser bidder) {
         // Existing validation logic from previous answer

@@ -10,6 +10,7 @@ import org.anas.bidderx_rest.service.FileStorageService;
 import org.anas.bidderx_rest.service.UserService;
 import org.anas.bidderx_rest.service.dto.ApiResponse;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +33,7 @@ public class ImageController {
         this.featuredImageService = featuredImageService;
     }
 
+    @PreAuthorize("!principal.banned")
     @PostMapping("/upload")
     public ResponseEntity<ApiResponse<String>> uploadImage(
             @RequestPart("image") @Valid @NotNull MultipartFile image,

@@ -5,6 +5,7 @@ import org.anas.bidderx_rest.service.AuctionReactionService;
 import org.anas.bidderx_rest.service.dto.ApiResponse;
 import org.anas.bidderx_rest.service.dto.LikeStatusDTO;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,6 +21,7 @@ public class AuctionReactionController {
         this.auctionReactionService = auctionReactionService;
     }
 
+    @PreAuthorize("!principal.banned")
     @PostMapping("/{auctionId}/like")
     public ResponseEntity<ApiResponse<LikeStatusDTO>> toggleLike(
             @PathVariable UUID auctionId,

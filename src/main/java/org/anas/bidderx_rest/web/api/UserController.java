@@ -10,6 +10,7 @@ import org.anas.bidderx_rest.service.dto.ProfileDTO;
 import org.anas.bidderx_rest.web.vm.PasswordUpdateVM;
 import org.anas.bidderx_rest.web.vm.ProfileUpdateVM;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -28,12 +29,14 @@ public class UserController {
     }
 
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{email}/ban")
     public ResponseEntity<ApiResponse<Void>> banUser(@PathVariable String email) {
         userService.banUserByEmail(email);
         return ResponseEntity.ok(new ApiResponse<>("User banned successfully", null));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{email}/unban")
     public ResponseEntity<ApiResponse<Void>> unbanUser(@PathVariable String email) {
         userService.unbanUserByEmail(email);
@@ -46,18 +49,21 @@ public class UserController {
         return ResponseEntity.ok(new ApiResponse<>("Users retrieved", users));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{email}/approve-owner")
     public ResponseEntity<ApiResponse<Void>> approveOwnerRequest(@PathVariable String email) {
         userService.approveOwnerRequestByEmail(email);
         return ResponseEntity.ok(new ApiResponse<>("Owner request approved", null));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{email}/reject-owner")
     public ResponseEntity<ApiResponse<Void>> rejectOwnerRequest(@PathVariable String email) {
         userService.rejectOwnerRequestByEmail(email);
         return ResponseEntity.ok(new ApiResponse<>("Owner request rejected", null));
     }
 
+    @PreAuthorize("!principal.banned")
     @PostMapping("/become-owner")
     public ResponseEntity<ApiResponse<Void>> requestOwnerUpgrade(@AuthenticationPrincipal AppUser currentUser) {
         // Retrieve current user from security context or principal
@@ -86,6 +92,7 @@ public class UserController {
         return ResponseEntity.ok(new ApiResponse<>("Profile retreived", profile));
     }
 
+    @PreAuthorize("!principal.banned")
     @PutMapping("/change-password")
     public ResponseEntity<ApiResponse<Void>> updatePassword(
             @RequestBody @Valid PasswordUpdateVM passwordUpdateVM,
@@ -95,6 +102,7 @@ public class UserController {
         return ResponseEntity.ok(new ApiResponse<>("Password updated successfully", null));
     }
 
+    @PreAuthorize("!principal.banned")
     @PutMapping("/edit-profile")
     public ResponseEntity<ApiResponse<ProfileDTO>> updateProfile(
             @RequestBody @Valid ProfileUpdateVM profileUpdateVM,
