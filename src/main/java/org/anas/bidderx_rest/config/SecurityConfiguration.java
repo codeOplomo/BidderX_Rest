@@ -58,6 +58,9 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/uploads/products/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/collections/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/auctions/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/users/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex

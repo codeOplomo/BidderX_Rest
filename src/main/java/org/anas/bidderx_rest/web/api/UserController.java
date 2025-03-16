@@ -73,7 +73,6 @@ public class UserController {
         return ResponseEntity.ok(new ApiResponse<>("Your owner upgrade request has been submitted.", null));
     }
 
-    // UserController.java
     @GetMapping("/{email}/profile")
     public ResponseEntity<ApiResponse<ProfileDTO>> getUserProfileByEmail(
             @PathVariable String email) {

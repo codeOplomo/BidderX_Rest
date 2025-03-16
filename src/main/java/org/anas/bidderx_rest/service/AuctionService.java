@@ -6,18 +6,22 @@ import org.anas.bidderx_rest.domain.enums.AuctionStatus;
 import org.anas.bidderx_rest.domain.enums.AuctionType;
 import org.anas.bidderx_rest.service.dto.AuctionDTO;
 import org.anas.bidderx_rest.service.dto.AuctionsStateDTO;
+import org.anas.bidderx_rest.service.dto.OwnerRankingDTO;
 import org.anas.bidderx_rest.web.vm.CreateAuctionVM;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface AuctionService {
+    Page<OwnerRankingDTO> getOwnerRanking(LocalDateTime startDate, Pageable pageable);
+
     Page<AuctionDTO> findWonAuctionsByEmail(String email, Pageable pageable);
 
     void endAuction(UUID auctionId);

@@ -122,7 +122,7 @@ public class WalletServiceImpl implements WalletService {
             throw new InvalidWalletTypeException("Deposit only allowed for FIAT wallets");
         }
 
-        Wallet updatedWallet = updateWalletBalanceWithDeposit(wallet, amount, currency, sessionId);
+        Wallet updatedWallet = updateWalletBalanceWithDeposit(wallet, amount, sessionId);
         return walletMapper.toDto(updatedWallet);
     }
 
@@ -174,7 +174,7 @@ public class WalletServiceImpl implements WalletService {
 
     }
 
-    private Wallet updateWalletBalanceWithDeposit(Wallet wallet, BigDecimal amount, String currency, String sessionId) {
+    private Wallet updateWalletBalanceWithDeposit(Wallet wallet, BigDecimal amount, String sessionId) {
         Transaction depositTransaction = createDepositTransaction(wallet, amount, sessionId);
         wallet.setBalance(wallet.getBalance().add(amount));
         wallet.getTransactions().add(depositTransaction);

@@ -33,7 +33,7 @@ public class CollectionController {
         CollectionDTO collectionDTO = collectionService.getCollectionById(id);
         return ResponseEntity.ok(new ApiResponse<>("Collection retrieved successfully", collectionDTO));
     }
-    @GetMapping("")
+    @GetMapping
     public ResponseEntity<ApiResponse<Page<CollectionDTO>>> getAllCollections(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size) {
@@ -66,6 +66,5 @@ public class CollectionController {
         CollectionDTO collectionDTO = collectionService.createCollection(userDetails.getUsername(), createVM);
         return ResponseEntity.ok(new ApiResponse<>("Collection created successfully", collectionDTO));
     }
-
 
 }

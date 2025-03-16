@@ -6,12 +6,14 @@ import jakarta.transaction.Transactional;
 import org.anas.bidderx_rest.domain.*;
 import org.anas.bidderx_rest.domain.enums.AuctionStatus;
 import org.anas.bidderx_rest.domain.enums.AuctionType;
+import org.anas.bidderx_rest.domain.enums.TransactionType;
 import org.anas.bidderx_rest.exceptions.*;
 import org.anas.bidderx_rest.repository.AuctionRepository;
 import org.anas.bidderx_rest.schedulers.AuctionScheduler;
 import org.anas.bidderx_rest.service.*;
 import org.anas.bidderx_rest.service.dto.AuctionDTO;
 import org.anas.bidderx_rest.service.dto.AuctionsStateDTO;
+import org.anas.bidderx_rest.service.dto.OwnerRankingDTO;
 import org.anas.bidderx_rest.service.dto.ProfileDTO;
 import org.anas.bidderx_rest.service.dto.mapper.AppUserMapper;
 import org.anas.bidderx_rest.service.dto.mapper.AuctionMapper;
@@ -36,6 +38,7 @@ import java.util.stream.Collectors;
 public class AuctionServiceImpl implements AuctionService {
     private final UserService userService;
     private final WalletService walletService;
+    private final TransactionService transactionService;
     private final AuctionRepository auctionRepository;
     private final AuctionMapper auctionMapper;
     private final AppUserMapper profileMapper;
@@ -45,6 +48,7 @@ public class AuctionServiceImpl implements AuctionService {
     public AuctionServiceImpl(
             UserService userService,
             WalletService walletService,
+            TransactionService transactionService,
             AuctionRepository auctionRepository,
             AuctionMapper auctionMapper,
             AppUserMapper profileMapper,
@@ -53,6 +57,7 @@ public class AuctionServiceImpl implements AuctionService {
     ) {
         this.userService = userService;
         this.walletService = walletService;
+        this.transactionService = transactionService;
         this.auctionRepository = auctionRepository;
         this.auctionMapper = auctionMapper;
         this.profileMapper = profileMapper;
@@ -60,6 +65,53 @@ public class AuctionServiceImpl implements AuctionService {
         this.auctionScheduler = auctionScheduler;
     }
 
+
+
+    @Override
+    @Transactional
+    public void endAuction(UUID auctionId) {
+        Auction auction = auctionRepository.findById(auctionId)
+                .orElseThrow(() -> new AuctionNotFoundException("Auction not found with ID: " + auctionId));
+
+        // Determine the winner by finding the highest bid
+        Bid winningBid = auction.getBids().stream()
+                .max(Comparator.comparing(Bid::getBidAmount))
+                .orElse(null);
+
+        if (winningBid != null) {
+            auction.setWinnerId(winningBid.getUser().getId());
+            BigDecimal ownerRevenue = winningBid.getBidAmount();
+
+            Wallet ownerWallet = walletService.findWalletByUser(auction.getOwner());
+            Transaction transaction = new Transaction();
+            transaction.setAmount(ownerRevenue);
+            transaction.setType(TransactionType.EARNING);
+            transaction.setWallet(ownerWallet);
+            transaction.setDescription("Auction payout for auction: " + auction.getTitle());
+
+            ownerWallet.setBalance(ownerWallet.getBalance().add(ownerRevenue));
+            transactionService.save(transaction);
+            walletService.saveWallet(ownerWallet);
+        }
+
+        // Update the auction status to ENDED
+        auction.setStatus(AuctionStatus.ENDED);
+        refundLosingBids(auction, winningBid);
+
+        // Save the auction updates
+        auctionRepository.save(auction);
+    }
+
+    public Page<OwnerRankingDTO> getOwnerRanking(LocalDateTime startDate, Pageable pageable) {
+        Page<Object[]> results = auctionRepository.findOwnerRevenuesSince(startDate, pageable);
+
+        return results.map(result ->
+                new OwnerRankingDTO(
+                        profileMapper.toProfileDTO((AppUser) result[0]),
+                        (BigDecimal) result[1]
+                )
+        );
+    }
 
     @Override
     public Page<AuctionDTO> findWonAuctionsByEmail(String email, Pageable pageable) {
@@ -81,30 +133,6 @@ public class AuctionServiceImpl implements AuctionService {
         });
     }
 
-    @Override
-    @Transactional
-    public void endAuction(UUID auctionId) {
-        // Retrieve the auction
-        Auction auction = auctionRepository.findById(auctionId)
-                .orElseThrow(() -> new AuctionNotFoundException("Auction not found with ID: " + auctionId));
-
-        // Determine the winner by finding the highest bid
-        Bid winningBid = auction.getBids().stream()
-                .max(Comparator.comparing(Bid::getBidAmount))
-                .orElse(null);
-
-        // If there's a winning bid, set the winnerId (make sure Auction has a field for this)
-        if (winningBid != null) {
-            auction.setWinnerId(winningBid.getUser().getId());
-        }
-
-        // Update the auction status to ENDED
-        auction.setStatus(AuctionStatus.ENDED);
-        refundLosingBids(auction, winningBid);
-
-        // Save the auction updates
-        auctionRepository.save(auction);
-    }
 
 
     private void refundLosingBids(Auction auction, Bid winningBid) {

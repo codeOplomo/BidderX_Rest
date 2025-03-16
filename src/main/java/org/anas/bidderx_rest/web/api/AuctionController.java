@@ -12,6 +12,7 @@ import org.anas.bidderx_rest.service.AuctionService;
 import org.anas.bidderx_rest.service.dto.ApiResponse;
 import org.anas.bidderx_rest.service.dto.AuctionDTO;
 import org.anas.bidderx_rest.service.dto.AuctionsStateDTO;
+import org.anas.bidderx_rest.service.dto.OwnerRankingDTO;
 import org.anas.bidderx_rest.web.vm.CreateAuctionVM;
 import org.anas.bidderx_rest.web.vm.RejectAuctionVM;
 import org.springframework.data.domain.Page;
@@ -24,6 +25,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -37,6 +39,34 @@ public class AuctionController {
         this.auctionService = auctionService;
     }
 
+
+    @GetMapping("/ranking")
+    public ResponseEntity<ApiResponse<Page<OwnerRankingDTO>>> getOwnerRanking(
+            @RequestParam String duration,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        LocalDateTime startDate = calculateStartDate(duration);
+
+        // Create a Pageable object for pagination
+        Pageable pageable = PageRequest.of(page, size, Sort.by("totalRevenue").descending());
+        // ^ If you need custom sorting, you can adapt Sort accordingly.
+
+        Page<OwnerRankingDTO> rankings = auctionService.getOwnerRanking(startDate, pageable);
+
+        return ResponseEntity.ok(new ApiResponse<>("Ranking retrieved", rankings));
+    }
+
+    private LocalDateTime calculateStartDate(String duration) {
+        LocalDateTime now = LocalDateTime.now();
+        switch (duration.toLowerCase()) {
+            case "1d": return now.minusDays(1);
+            case "7d": return now.minusDays(7);
+            case "15d": return now.minusDays(15);
+            case "1m": return now.minusMonths(1);
+            default: throw new IllegalArgumentException("Invalid duration. Use: 1d,7d,15d,1m");
+        }
+    }
 
     @GetMapping("/victories")
     public ResponseEntity<ApiResponse<Page<AuctionDTO>>> getUserWonAuctions(
