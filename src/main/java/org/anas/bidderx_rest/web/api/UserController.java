@@ -63,7 +63,7 @@ public class UserController {
         return ResponseEntity.ok(new ApiResponse<>("Owner request rejected", null));
     }
 
-    @PreAuthorize("!principal.banned")
+    @PreAuthorize("!principal.banned and hasRole('BIDDER')")
     @PostMapping("/become-owner")
     public ResponseEntity<ApiResponse<Void>> requestOwnerUpgrade(@AuthenticationPrincipal AppUser currentUser) {
         // Retrieve current user from security context or principal

@@ -2,6 +2,7 @@ package org.anas.bidderx_rest.web.api;
 
 import jakarta.validation.Valid;
 import org.anas.bidderx_rest.domain.AppCollection;
+import org.anas.bidderx_rest.domain.AppUser;
 import org.anas.bidderx_rest.service.CollectionService;
 import org.anas.bidderx_rest.service.dto.ApiResponse;
 import org.anas.bidderx_rest.service.dto.CollectionDTO;
@@ -28,6 +29,32 @@ public class CollectionController {
         this.collectionService = collectionService;
     }
 
+
+    @PreAuthorize("!principal.banned and hasRole('OWNER')")
+    @DeleteMapping("/{collectionId}/products/{productId}")
+    public ResponseEntity<ApiResponse<String>> removeProductFromCollection(
+            @PathVariable UUID collectionId,
+            @PathVariable UUID productId,
+            @AuthenticationPrincipal AppUser currentUser
+    ) {
+        collectionService.removeProductFromCollection(currentUser.getEmail(), collectionId, productId);
+        return ResponseEntity.ok(new ApiResponse<>("Product removed from collection", "Success"));
+    }
+
+    @PreAuthorize("!principal.banned and hasRole('OWNER')")
+    @PostMapping("/{collectionId}/products")
+    public ResponseEntity<ApiResponse<String>> addProductsToCollection(
+            @PathVariable UUID collectionId,
+            @RequestBody List<UUID> productIds,
+            @AuthenticationPrincipal AppUser currentUser
+    ) {
+        collectionService.addProductsToCollection(
+                currentUser.getEmail(),
+                collectionId,
+                productIds
+        );
+        return ResponseEntity.ok(new ApiResponse<>("Products added to collection", "Success"));
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<CollectionDTO>> getCollectionById(@PathVariable UUID id) {

@@ -29,6 +29,12 @@ public class ProductController {
         this.productService = productService;
     }
 
+    @GetMapping("/{collectionId}/products")
+    public ResponseEntity<ApiResponse<List<ProductDTO>>> getCollectionProducts(@PathVariable UUID collectionId) {
+        List<ProductDTO> products = productService.getCollectionProducts(collectionId);
+        return ResponseEntity.ok(new ApiResponse<>("Products retrieved successfully", products));
+    }
+
     @PreAuthorize("!principal.banned and hasRole('OWNER')")
     @PostMapping
     public ResponseEntity<ApiResponse<ProductDTO>> createProduct(

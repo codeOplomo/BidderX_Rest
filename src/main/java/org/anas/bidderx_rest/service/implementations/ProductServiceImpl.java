@@ -53,6 +53,17 @@ public class ProductServiceImpl implements ProductService {
         this.collectionMapper = collectionMapper;
     }
 
+    @Override
+    public Product findById(UUID id) {
+        return productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + id));
+    }
+
+    @Override
+    public List<ProductDTO> getCollectionProducts(UUID collectionId) {
+        List<Product> products = productRepository.findByCollectionId(collectionId);
+        return products.stream().map(productMapper::toProductDTO).collect(Collectors.toList());
+    }
 
     public void handleProductImages(
             CreateAuctionVM request,

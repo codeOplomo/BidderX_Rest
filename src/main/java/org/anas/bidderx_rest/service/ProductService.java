@@ -13,6 +13,10 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ProductService {
+    Product findById(UUID id);
+
+    List<ProductDTO> getCollectionProducts(UUID collectionId);
+
     void handleProductImages(
             CreateAuctionVM request,
             MultipartFile mainImage,

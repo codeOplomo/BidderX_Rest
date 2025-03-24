@@ -16,6 +16,9 @@ import java.util.UUID;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, UUID> {
+    @Query("SELECT p FROM Product p JOIN p.productCollections pc WHERE pc.appCollection.id = :collectionId")
+    List<Product> findByCollectionId(@Param("collectionId") UUID collectionId);
+
     @Query("SELECT p FROM Product p WHERE p.owner.email = :email")
     Page<Product> findByOwnerEmail(@Param("email") String email, Pageable pageable);
 

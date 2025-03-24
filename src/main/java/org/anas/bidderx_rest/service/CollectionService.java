@@ -11,6 +11,10 @@ import java.util.List;
 import java.util.UUID;
 
 public interface CollectionService {
+    void removeProductFromCollection(String email, UUID collectionId, UUID productId);
+
+    void addProductsToCollection(String email, UUID collectionId, List<UUID> productIds);
+
     Page<CollectionDTO> getAllCollections(PageRequest pageRequest);
 
     CollectionDTO createCollection(String username, CollectionVM createVM);
