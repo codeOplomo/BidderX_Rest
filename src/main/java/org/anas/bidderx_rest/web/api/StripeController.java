@@ -67,7 +67,7 @@ public class StripeController {
     private void processCompletedSession(Session session) {
         String sessionId = session.getId();
         if (transactionService.existsBySessionId(sessionId)) {
-            return; // Already processed
+            return;
         }
 
         UUID walletId = UUID.fromString(session.getClientReferenceId());
@@ -75,10 +75,8 @@ public class StripeController {
                 .divide(BigDecimal.valueOf(100));
         String currency = session.getCurrency().toUpperCase();
 
-        // Deposit funds into the wallet
         walletService.depositFunds(walletId, amount, currency, sessionId);
 
-        // Retrieve the wallet and update the associated user's hasWallet flag if needed
         Wallet wallet = walletService.findById(walletId);
         AppUser user = wallet.getUser();
         if (!user.isHasWallet()) {

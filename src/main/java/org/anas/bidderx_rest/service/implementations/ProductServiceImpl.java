@@ -70,6 +70,8 @@ public class ProductServiceImpl implements ProductService {
             MultipartFile mainImage,
             List<MultipartFile> additionalImages
     ) {
+        System.out.println("main image: " + mainImage);
+        System.out.println("additional images: " + additionalImages);
         // Validate main image for new products
         if (request.getExistingProductId() == null) {
             if (mainImage == null || mainImage.isEmpty()) {
@@ -194,9 +196,17 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Page<ProductDTO> findAvailableProductsByEmail(String email, Pageable pageable) {
         AppUser user = userService.findUserByEmail(email);
-        Page<Product> products = productRepository.findByOwnerEmail(email, pageable);
-        return products.map(productMapper::toProductDTO);
+        Page<Object[]> results = productRepository.findByOwnerEmail(email, pageable);
+
+        return results.map(result -> {
+            Product product = (Product) result[0];
+            UUID auctionId = (UUID) result[1]; // Get auction ID if available
+            ProductDTO dto = productMapper.toProductDTO(product);
+            dto.setAuctionId(auctionId);
+            return dto;
+        });
     }
+
 
 
     @Transactional

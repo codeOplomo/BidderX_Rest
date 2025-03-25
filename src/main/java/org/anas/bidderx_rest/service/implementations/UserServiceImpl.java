@@ -9,15 +9,20 @@ import org.anas.bidderx_rest.exceptions.*;
 import org.anas.bidderx_rest.repository.AppUserRepository;
 import org.anas.bidderx_rest.service.UserService;
 import org.anas.bidderx_rest.service.WalletService;
+import org.anas.bidderx_rest.service.dto.OwnerRankingDTO;
 import org.anas.bidderx_rest.service.dto.ProfileDTO;
 import org.anas.bidderx_rest.service.dto.mapper.AppUserMapper;
 import org.anas.bidderx_rest.web.vm.PasswordUpdateVM;
 import org.anas.bidderx_rest.web.vm.ProfileUpdateVM;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -38,6 +43,16 @@ public class UserServiceImpl implements UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+
+    public Page<OwnerRankingDTO> searchUsers(String query, Pageable pageable) {
+        Page<Object[]> results = userRepository.searchUsersWithRevenue(query, pageable);
+        return results.map(result ->
+                new OwnerRankingDTO(
+                        appUserMapper.toProfileDTO((AppUser) result[0]),
+                        (BigDecimal) result[1]
+                )
+        );
+    }
 
     @Override
     public void banUserByEmail(String email) {

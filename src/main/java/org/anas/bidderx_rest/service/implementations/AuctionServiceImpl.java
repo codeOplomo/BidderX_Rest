@@ -1,7 +1,6 @@
 package org.anas.bidderx_rest.service.implementations;
 
-import jakarta.persistence.criteria.Order;
-import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.*;
 import jakarta.transaction.Transactional;
 import org.anas.bidderx_rest.domain.*;
 import org.anas.bidderx_rest.domain.enums.AuctionStatus;
@@ -44,6 +43,7 @@ public class AuctionServiceImpl implements AuctionService {
     private final AppUserMapper profileMapper;
     private final ProductService productService;
     private final AuctionScheduler auctionScheduler;
+    private final FeaturedImageService featuredImageService;
 
     public AuctionServiceImpl(
             UserService userService,
@@ -53,6 +53,7 @@ public class AuctionServiceImpl implements AuctionService {
             AuctionMapper auctionMapper,
             AppUserMapper profileMapper,
             ProductService productService,
+            FeaturedImageService featuredImageService,
             @Lazy AuctionScheduler auctionScheduler
     ) {
         this.userService = userService;
@@ -62,10 +63,15 @@ public class AuctionServiceImpl implements AuctionService {
         this.auctionMapper = auctionMapper;
         this.profileMapper = profileMapper;
         this.productService = productService;
+        this.featuredImageService = featuredImageService;
         this.auctionScheduler = auctionScheduler;
     }
 
 
+    @Override
+    public Auction save(Auction auction) {
+        return auctionRepository.save(auction);
+    }
 
     @Override
     @Transactional
@@ -136,30 +142,23 @@ public class AuctionServiceImpl implements AuctionService {
 
 
     private void refundLosingBids(Auction auction, Bid winningBid) {
-        // Map to hold total refundable amount per bidder
         Map<UUID, BigDecimal> refundAmounts = new HashMap<>();
 
         for (Bid bid : auction.getBids()) {
             UUID bidderId = bid.getUser().getId();
-            // For the winning bidder, only refund the bids that are not the winning bid
             if (winningBid != null && bidderId.equals(winningBid.getUser().getId())) {
-                // Skip refund for the winning bid, but refund other bids from the same user
                 if (!bid.getId().equals(winningBid.getId())) {
                     refundAmounts.merge(bidderId, bid.getBidAmount(), BigDecimal::add);
                 }
             } else {
-                // For losing bidders, refund the full bid amount
                 refundAmounts.merge(bidderId, bid.getBidAmount(), BigDecimal::add);
             }
         }
 
-        // Process refunds for each bidder
         refundAmounts.forEach((bidderId, amount) -> {
-            // Retrieve the user and their wallet
             AppUser bidder = userService.findUserById(bidderId);
             Wallet wallet = walletService.findWalletByUser(bidder);
 
-            // Refund the amount (credit the wallet)
             wallet.setBalance(wallet.getBalance().add(amount));
             walletService.saveWallet(wallet);
         });
@@ -181,9 +180,11 @@ public class AuctionServiceImpl implements AuctionService {
             AuctionStatus status,
             AuctionType type,
             String query,
+            Integer startDate,
+            Integer endDate,
             Pageable pageable
     ) {
-        Specification<Auction> spec = buildSpecification(categoryId, minPrice, maxPrice, status, type, query);
+        Specification<Auction> spec = buildSpecification(categoryId, minPrice, maxPrice, status, type, query, startDate, endDate);
         return auctionRepository.findAll(spec, pageable).map(auctionMapper::toDTO);
     }
 
@@ -193,13 +194,16 @@ public class AuctionServiceImpl implements AuctionService {
             Double maxPrice,
             AuctionStatus status,
             AuctionType type,
-            String query
+            String query,
+            Integer startDate,
+            Integer endDate
     ) {
         Specification<Auction> spec = Specification.where(statusSpec(status))
                 .and(categorySpec(categoryId))
                 .and(minPriceSpec(minPrice))
                 .and(maxPriceSpec(maxPrice))
-                .and(typeSpec(type));
+                .and(typeSpec(type))
+                .and(dateRangeSpec(startDate, endDate));
 
         if (query != null && !query.isEmpty()) {
             Specification<Auction> querySpec = (root, queryObj, cb) -> {
@@ -214,6 +218,32 @@ public class AuctionServiceImpl implements AuctionService {
         return spec;
     }
 
+
+    private Specification<Auction> dateRangeSpec(Integer startYear, Integer endYear) {
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            Join<Auction, Product> productJoin = root.join("product");
+
+            if (startYear != null) {
+                predicates.add(cb.ge(
+                        cb.function("date_part", Integer.class,
+                                cb.literal("year"),
+                                productJoin.get("productionDate")),
+                        startYear
+                ));
+            }
+            if (endYear != null) {
+                predicates.add(cb.le(
+                        cb.function("date_part", Integer.class,
+                                cb.literal("year"),
+                                productJoin.get("productionDate")),
+                        endYear
+                ));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+    }
 
 
     private Specification<Auction> typeSpec(AuctionType type) {
@@ -282,10 +312,18 @@ public class AuctionServiceImpl implements AuctionService {
 
         AuctionDTO dto = auctionMapper.toDTO(auction);
         setLikeStatus(auction, dto, user);
+
         if (auction.getWinnerId() != null) {
             AppUser winnerUser = userService.findUserById(auction.getWinnerId());
             dto.setWinner(profileMapper.toProfileDTO(winnerUser));
         }
+
+        // Retrieve and set the product's featured images manually
+        List<String> featuredImages = featuredImageService.getProductFeaturedImages(auction.getProduct().getId());
+        if (dto.getProduct() != null) {
+            dto.getProduct().setFeaturedImages(featuredImages);
+        }
+
         return dto;
     }
 
@@ -376,18 +414,16 @@ public class AuctionServiceImpl implements AuctionService {
         auction.setStatus(AuctionStatus.APPROVED);
         auction.setStartTime(LocalDateTime.now());
 
-        // Set endTime for TIMED auctions
         if (auction.getAuctionType() == AuctionType.TIMED) {
             Integer duration = auction.getAuctionDurationInHours();
             if (duration == null || duration <= 0) {
                 throw new InvalidAuctionException("Invalid auction duration for timed auction");
             }
             auction.setEndTime(auction.getStartTime().plusHours(duration));
+            auctionScheduler.scheduleAuctionEnd(auction);
         }
 
         auction = auctionRepository.save(auction);
-
-        auctionScheduler.scheduleAuctionEnd(auction);
         return auctionMapper.toDTO(auction);
     }
 

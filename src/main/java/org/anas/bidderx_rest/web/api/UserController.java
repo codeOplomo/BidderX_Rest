@@ -6,9 +6,13 @@ import org.anas.bidderx_rest.domain.enums.OwnerRequestStatus;
 import org.anas.bidderx_rest.domain.enums.Role;
 import org.anas.bidderx_rest.service.UserService;
 import org.anas.bidderx_rest.service.dto.ApiResponse;
+import org.anas.bidderx_rest.service.dto.OwnerRankingDTO;
 import org.anas.bidderx_rest.service.dto.ProfileDTO;
 import org.anas.bidderx_rest.web.vm.PasswordUpdateVM;
 import org.anas.bidderx_rest.web.vm.ProfileUpdateVM;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,6 +30,18 @@ public class UserController {
 
     public UserController(UserService userService) {
         this.userService = userService;
+    }
+
+
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<Page<OwnerRankingDTO>>> searchUsers(
+            @RequestParam String q,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<OwnerRankingDTO> results = userService.searchUsers(q, pageable);
+        return ResponseEntity.ok(new ApiResponse<>("Users found", results));
     }
 
 

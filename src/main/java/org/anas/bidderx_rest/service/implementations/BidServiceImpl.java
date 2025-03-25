@@ -5,6 +5,7 @@ import org.anas.bidderx_rest.domain.AppUser;
 import org.anas.bidderx_rest.domain.Auction;
 import org.anas.bidderx_rest.domain.Bid;
 import org.anas.bidderx_rest.domain.enums.AuctionStatus;
+import org.anas.bidderx_rest.domain.enums.AuctionType;
 import org.anas.bidderx_rest.exceptions.AuctionNotFoundException;
 import org.anas.bidderx_rest.exceptions.InsufficientFundsException;
 import org.anas.bidderx_rest.exceptions.InvalidBidException;
@@ -66,6 +67,15 @@ public class BidServiceImpl implements BidService {
 
         updateAuctionCurrentPrice(auction, newBid.getBidAmount());
 
+        if (auction.getAuctionType() == AuctionType.INSTANT) {
+            long bidCount = bidRepository.countByAuctionId(auction.getId());
+            if (bidCount == 1) {
+                auction.setEndTime(LocalDateTime.now());
+                auction.setStatus(AuctionStatus.ENDED);
+                auction.setWinnerId(bidder.getId());
+                auctionService.save(auction);
+            }
+        }
         return bidMapper.toBidDTO(savedBid);
     }
 
@@ -98,20 +108,31 @@ public class BidServiceImpl implements BidService {
 
 
     private void validateBid(Auction auction, BigDecimal bidAmount, AppUser bidder) {
-        // Existing validation logic from previous answer
+        // Existing owner and status checks
         if (auction.getStatus() != AuctionStatus.APPROVED) {
             throw new InvalidBidException("Auction is not active for bidding");
-        }
-
-        LocalDateTime now = LocalDateTime.now();
-        if (now.isBefore(auction.getStartTime()) || now.isAfter(auction.getEndTime())) {
-            throw new InvalidBidException("Auction is not currently active");
         }
 
         if (auction.getOwner().getId().equals(bidder.getId())) {
             throw new InvalidBidException("Auction owner cannot bid on their own auction");
         }
 
+        LocalDateTime now = LocalDateTime.now();
+
+        // Modified time validation
+        if (auction.getAuctionType() == AuctionType.TIMED) {
+            // Validate time window for timed auctions
+            if (now.isBefore(auction.getStartTime()) || now.isAfter(auction.getEndTime())) {
+                throw new InvalidBidException("Auction is not currently active");
+            }
+        } else if (auction.getAuctionType() == AuctionType.INSTANT) {
+            // Additional check for instant auctions
+            if (auction.getEndTime() != null) {
+                throw new InvalidBidException("Instant auction has already ended");
+            }
+        }
+
+        // Existing bid amount validation
         if (bidAmount.compareTo(auction.getCurrentPrice()) <= 0) {
             throw new InvalidBidException("Bid amount must be higher than current price of "
                     + auction.getCurrentPrice());
@@ -120,7 +141,7 @@ public class BidServiceImpl implements BidService {
 
     private void updateAuctionCurrentPrice(Auction auction, BigDecimal newBid) {
         auction.setCurrentPrice(newBid);
-//        auctionService.save(auction);
+        auctionService.save(auction);
     }
 
 }

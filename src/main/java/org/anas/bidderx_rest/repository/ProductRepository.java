@@ -19,8 +19,9 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     @Query("SELECT p FROM Product p JOIN p.productCollections pc WHERE pc.appCollection.id = :collectionId")
     List<Product> findByCollectionId(@Param("collectionId") UUID collectionId);
 
-    @Query("SELECT p FROM Product p WHERE p.owner.email = :email")
-    Page<Product> findByOwnerEmail(@Param("email") String email, Pageable pageable);
+    @Query("SELECT p, a.id FROM Product p LEFT JOIN Auction a ON a.product.id = p.id WHERE p.owner.email = :email")
+    Page<Object[]> findByOwnerEmail(@Param("email") String email, Pageable pageable);
+
 
     @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END " +
             "FROM Auction a WHERE a.product.id = :productId")

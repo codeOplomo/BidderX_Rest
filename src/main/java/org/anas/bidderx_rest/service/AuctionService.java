@@ -20,6 +20,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface AuctionService {
+    Auction save(Auction auction);
+
     Page<OwnerRankingDTO> getOwnerRanking(LocalDateTime startDate, Pageable pageable);
 
     Page<AuctionDTO> findWonAuctionsByEmail(String email, Pageable pageable);
@@ -28,7 +30,7 @@ public interface AuctionService {
 
     List<AuctionDTO> searchAuctions(String query, int limit);
 
-    Page<AuctionDTO> getAuctionsByFilter(UUID categoryId, Double minPrice, Double maxPrice, AuctionStatus status, AuctionType type, String query, Pageable pageable);
+    Page<AuctionDTO> getAuctionsByFilter(UUID categoryId, Double minPrice, Double maxPrice, AuctionStatus status, AuctionType type, String query, Integer startDate, Integer endDate, Pageable pageable);
 
     Page<AuctionDTO> getLiveAuctions(Pageable pageable, AppUser user);
 

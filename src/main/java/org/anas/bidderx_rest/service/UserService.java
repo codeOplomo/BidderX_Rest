@@ -1,9 +1,12 @@
 package org.anas.bidderx_rest.service;
 
 import org.anas.bidderx_rest.domain.AppUser;
+import org.anas.bidderx_rest.service.dto.OwnerRankingDTO;
 import org.anas.bidderx_rest.service.dto.ProfileDTO;
 import org.anas.bidderx_rest.web.vm.PasswordUpdateVM;
 import org.anas.bidderx_rest.web.vm.ProfileUpdateVM;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,6 +15,8 @@ import java.util.List;
 import java.util.UUID;
 
 public interface UserService {
+    Page<OwnerRankingDTO> searchUsers(String query, Pageable pageable);
+
     void unbanUserByEmail(String email);
 
     void banUserByEmail(String email);

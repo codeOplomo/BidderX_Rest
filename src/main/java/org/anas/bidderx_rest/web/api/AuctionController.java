@@ -49,9 +49,8 @@ public class AuctionController {
     ) {
         LocalDateTime startDate = calculateStartDate(duration);
 
-        // Create a Pageable object for pagination
         Pageable pageable = PageRequest.of(page, size, Sort.by("totalRevenue").descending());
-        // ^ If you need custom sorting, you can adapt Sort accordingly.
+
 
         Page<OwnerRankingDTO> rankings = auctionService.getOwnerRanking(startDate, pageable);
 
@@ -60,13 +59,13 @@ public class AuctionController {
 
     private LocalDateTime calculateStartDate(String duration) {
         LocalDateTime now = LocalDateTime.now();
-        switch (duration.toLowerCase()) {
-            case "1d": return now.minusDays(1);
-            case "7d": return now.minusDays(7);
-            case "15d": return now.minusDays(15);
-            case "1m": return now.minusMonths(1);
-            default: throw new IllegalArgumentException("Invalid duration. Use: 1d,7d,15d,1m");
-        }
+        return switch (duration.toLowerCase()) {
+            case "1d" -> now.minusDays(1);
+            case "7d" -> now.minusDays(7);
+            case "15d" -> now.minusDays(15);
+            case "1m" -> now.minusMonths(1);
+            default -> throw new IllegalArgumentException("Invalid duration. Use: 1d,7d,15d,1m");
+        };
     }
 
     @GetMapping("/victories")
@@ -88,6 +87,8 @@ public class AuctionController {
             @RequestPart(value = "additionalImages", required = false) List<MultipartFile> additionalImages,
             @AuthenticationPrincipal AppUser authenticatedUser
     ) {
+        System.out.println("mainImage = " + mainImage);
+        System.out.println("additionalImages = " + additionalImages);
         AuctionDTO auctionDTO = auctionService.createAuction(request, mainImage, additionalImages, authenticatedUser);
         return ResponseEntity.ok(new ApiResponse<>("Auction created successfully", auctionDTO));
     }
@@ -134,13 +135,15 @@ public class AuctionController {
             @RequestParam(required = false) AuctionStatus status,
             @RequestParam(required = false) AuctionType type,
             @RequestParam(required = false) String q,
+            @RequestParam(required = false) Integer startDate,
+            @RequestParam(required = false) Integer endDate,
             @RequestParam(defaultValue = "DESC") String sortOrder,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "8") int size) {
 
         Sort sort = Sort.by(Sort.Direction.fromString(sortOrder), "startTime");
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<AuctionDTO> auctions = auctionService.getAuctionsByFilter(categoryId, minPrice, maxPrice, status, type, q, pageable);
+        Page<AuctionDTO> auctions = auctionService.getAuctionsByFilter(categoryId, minPrice, maxPrice, status, type, q, startDate, endDate, pageable);
         return ResponseEntity.ok(new ApiResponse<>("Auctions retrieved successfully", auctions));
     }
 

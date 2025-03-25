@@ -42,22 +42,19 @@ public class ImageController {
             @RequestParam(value = "productId", required = false) UUID productId,
             @AuthenticationPrincipal AppUser authenticatedUser
     ) {
-        System.out.println("Type: " + type); // Debugging output
-        System.out.println("Collection ID: " + collectionId); // Debugging output
+        System.out.println("Type: " + type);
+        System.out.println("Collection ID: " + collectionId);
 
-        // Determine the target folder
         String targetFolder = switch (type) {
             case "cover" -> "cover-images";
             case "profile" -> "profile-images";
             case "collection-cover" -> "collection-cover-images";
-            case "product-featured" -> "product-images/featured"; // Subfolder for featured images
+            case "product-featured" -> "product-images/featured";
             default -> "general";
         };
 
-        // Store the file in the correct folder and get its URL
         String imageUrl = fileStorageService.storeFile(image, targetFolder);
 
-        // Update the user's profile or cover image in the database
         switch (type) {
             case "cover" -> userService.uploadCoverImage(authenticatedUser, imageUrl);
             case "profile" -> userService.uploadProfileImage(authenticatedUser, imageUrl);
@@ -68,7 +65,7 @@ public class ImageController {
                 }
                 featuredImageService.saveFeaturedImage(productId, "product", imageUrl);
             }
-            // 'product-main' doesn't update here; handled during product creation
+
         }
 
         return ResponseEntity.ok(new ApiResponse<>("Image uploaded successfully", imageUrl));
